@@ -5,8 +5,8 @@
 ## Login - EKS Cluster
 
 ```shell
-# Show Name of Cluster and Login
-CLUSTER_NAME=$(aws eks list-clusters --region us-east-2 --query "clusters[?contains(@, 'develop')]|[0]" --output text)
+# Show Name of Cluster and Login (fish)
+set CLUSTER_NAME (aws eks list-clusters --region us-east-2 --query "clusters[?contains(@, 'develop')]|[0]" --output text)
 aws eks update-kubeconfig --name $CLUSTER_NAME --region us-east-2
 ```
 
@@ -16,10 +16,10 @@ aws eks update-kubeconfig --name $CLUSTER_NAME --region us-east-2
 
 ```shell
 echo "URL:" && \
-k -n argocd get svc argocd-server -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' && \
+kubectl -n argocd get svc argocd-server -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' && \
 echo && \
 echo "Password:" && \
-k -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d && \
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d && \
 echo
 ```
 
@@ -29,10 +29,10 @@ echo
 
 ```shell
 echo "URL:" && \
-k get svc -n monitoring monitoring-grafana -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' && \
+kubectl get svc -n monitoring monitoring-grafana -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' && \
 echo && \
 echo "Credentials:" && \
-echo "admin/"$(k get secret -n monitoring monitoring-grafana -o jsonpath="{.data.admin-password}" | base64 --decode) && \
+echo "admin/"$(kubectl get secret -n monitoring monitoring-grafana -o jsonpath="{.data.admin-password}" | base64 --decode) && \
 echo
 ```
 
@@ -46,15 +46,14 @@ echo
 ║ 3. Import & Configure                          ║
 ╚════════════════════════════════════════════════╝
 
-# Promtail - Check - Logs
-k -n monitoring logs -l app.kubernetes.io/name=promtail --tail 100
-
-# Loki - Check
-curl -s http://monitoring-loki:3100/ready
-
-# Prometheus - Check (Debug)
-k patch svc monitoring-prometheus-server -n monitoring -p '{"spec": {"type": "LoadBalancer"}}'
-k get svc -n monitoring monitoring-prometheus-server -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+╔════════════════════════════════════════════════╗
+║ Pods Logging Setup:                            ║
+║ 1. Grafana -> Dashboards -> Import             ║
+║ 2. Import ID: 15141(Loki Kubernetes Logs)      ║
+║    - URL:                                      ║
+║    - Datasource: Loki                          ║
+║ 3. Import & Configure                          ║
+╚════════════════════════════════════════════════╝
 
 # Node Exporter Dashboard: https://grafana.com/grafana/dashboards/1860
 # Kubernetes Dashboard: https://grafana.com/grafana/dashboards/315
@@ -113,7 +112,7 @@ kubectl exec -it vault-0 -n vault -- vault kv get secret/database/rds
 
 # 3. This
 helm uninstall argocd -n argocd
-k delete namespace argocd
+kubectl delete namespace argocd
 
 # Need to try
 argocd app delete monitoring --cascade

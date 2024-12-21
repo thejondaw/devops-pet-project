@@ -9,13 +9,13 @@ on:
         default: "develop"
         type: choice
         options: [develop, stage, master]
-  # push:
-  #   branches: ["master", "stage", "develop"]
-  #   paths:
-  #     - "terraform/**"
-  #     - ".github/workflows/cd-destroy.yaml"
-  #     - "Makefile"
-  #     - "scripts/post-install.sh"
+  push:
+    branches: ["master", "stage", "develop"]
+    paths:
+      - "terraform/**"
+      - ".github/workflows/cd-destroy.yaml"
+      - "Makefile"
+      - "scripts/post-install.sh"
 
 env:
   TF_STATE_BUCKET: alexsuff

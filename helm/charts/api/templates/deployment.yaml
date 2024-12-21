@@ -13,13 +13,18 @@ spec:
     metadata:
       annotations:
         vault.hashicorp.com/agent-inject: "true"
-        vault.hashicorp.com/agent-inject-secret-database: "database/creds/api"
-        vault.hashicorp.com/role: "api"
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "3000"
+        vault.hashicorp.com/agent-inject-status: "update"
+        vault.hashicorp.com/role: {{ .Values.vault.role | quote }}
+        vault.hashicorp.com/agent-inject-secret-database: {{ .Values.vault.path | quote }}
+        vault.hashicorp.com/agent-inject-template-database: |
+          {{`{{- with secret "aws/creds/rds-role" -}}
+          export DBUSER="{{ .Data.username }}"
+          export DBPASS="{{ .Data.password }}"
+          {{- end -}}`}}
       labels:
         {{- include "api.selectorLabels" . | nindent 8 }}
     spec:
+      serviceAccountName: {{ .Release.Name }}-sa
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -56,16 +61,6 @@ spec:
                 configMapKeyRef:
                   name: {{ .Release.Name }}-cm
                   key: DB_NAME
-            - name: DBUSER
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-secret
-                  key: username
-            - name: DBPASS
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-secret
-                  key: password
           securityContext:
             allowPrivilegeEscalation: false
             runAsNonRoot: true

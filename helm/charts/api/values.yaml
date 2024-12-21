@@ -27,3 +27,17 @@ service:
   port: 80
   targetPort: 3000
 
+vault:
+  enabled: true
+  role: "api"
+  path: "aws/creds/rds-role"
+
+database:
+  port: "5432"
+  name: "devopsdb"
+  host: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
