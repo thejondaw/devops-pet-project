@@ -1,6 +1,6 @@
 apiVersion: v2
-name: monitoring # теперь просто monitoring
-description: Monitoring Stack (Prometheus, Loki, Grafana) for Kubernetes
+name: monitoring
+description: Monitoring Stack (Grafana, Prometheus, Loki, Promtail) for Kubernetes
 version: 0.1.0
 dependencies:
   - name: prometheus

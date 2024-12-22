@@ -6,7 +6,6 @@
 variable "region" {
   description = "AWS Region for backend resources"
   type        = string
-  default     = "us-east-2"
 }
 
 # Variable - Environment

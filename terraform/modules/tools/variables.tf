@@ -13,7 +13,7 @@ variable "environment" {
   description = "Environment name (develop, stage, prod)"
   type        = string
   validation {
-    condition     = contains(["develop", "stage", "prod"], var.environment)
+    condition     = contains(["app"], var.environment)
     error_message = "Environment must be develop, stage, or prod."
   }
 }
@@ -25,7 +25,7 @@ variable "environment_configuration" {
     namespaces = list(string)
   })
   default = {
-    namespaces = ["develop", "stage", "prod"]
+    namespaces = ["app"]
   }
   validation {
     condition     = length(var.environment_configuration.namespaces) > 0

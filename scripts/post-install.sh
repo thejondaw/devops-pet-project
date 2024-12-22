@@ -28,7 +28,6 @@ kubectl apply -f k8s/argocd/applications/develop/vault.yaml
 # kubectl apply -f k8s/argocd/applications/develop/api.yaml
 # kubectl apply -f k8s/argocd/applications/develop/web.yaml
 
-# kubectl apply -f k8s/argocd/applications/develop/apparmor.yaml
 
 
 
@@ -127,9 +126,9 @@ EOF
 
 main() {
     print_header "Starting developer environment setup"
-    
+
     setup_shell_aliases
-    
+
     print_header "Setup completed successfully!"
     print_info "Please restart your terminal or run 'source ~/.bashrc' to apply changes"
 }

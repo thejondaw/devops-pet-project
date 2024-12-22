@@ -1,103 +1,86 @@
-# DevOps Project. CI/CD/CD Pipeline
+# DevOps Project: Three-tier Architecture on AWS
+
+Enterprise-grade deployment of a three-tier architecture using modern DevOps practices and tools.
 
 ---
 
-## Diagram
+## Architecture Overview
 
 ```
-                ┌──────────────────────────────────────────────────────────┐
-                │                            VPC                           │
-                │ ┌──────────────────────────────────────────────────────┐ │
-                │ │                 (2x PRIVATE SUBNETS)                 │ │
-                │ │   ┌──────────────────────────────────────────────┐   │ │
-                │ │   │               TIER I - DATABASE              │   │ │
-                │ │   └───┐ ┌─────────┐ ┌──────────┐ ┌─────────┐ ┌───┘   │ │
-                │ │        │           │            │           │        │ │
-                │ │     DB_NAME     DB_PORT      DB_USER     DB_PASS     │ │
-                │ │        │           │            │           │        │ │
-                │ │        ▼           ▼            ▼           ▼        │ │
-                │ │ ╔═════╣ ╠═════════╣ ╠══════════╣ ╠═════════╣ ╠═════╗ │ │
-                │ │ ║                                                  ║ │ │
-                │ │ ║                   (EKS CLUSTER)                  ║ │ │
-                │ │ ║                                                  ║ │ │
-                │ │ ║  ┌──┘ └─────────┘ └──────────┘ └─────────┘ └──┐  ║ │ │
-                │ │ ║  │               TIER II - API                │  ║ │ │
-                │ │ ║  └─────────┐ ┌────────────────────┐ ┌─────────┘  ║ │ │
-                │ │ ║             ▲                      ▲             ║ │ │
-                │ │ ║             │                      │             ║ │ │
-                │ └─║───────────┤ │ ├──────────────────┤ │ ├───────────║─┘ │
-                │   ║             │                      │             ║   │
-                │   ║          API_HOST               API_PORT         ║   │
-                │   ║             │                      │             ║   │
-                │ ┌─║───────────┤ │ ├──────────────────┤ │ ├───────────║─┐ │
-                │ │ ║             │ (2x PUBLIC  SUBNETS) │             ║ │ │
-                │ │ ║  ┌─────────┘ └────────────────────┘ └─────────┐  ║ │ │
-                │ │ ║  │                TIER III - WEB              │  ║ │ │
-                │ │ ║  └─────────────────────┐ ┌────────────────────┘  ║ │ │
-                │ │ ║                         │                        ║ │ │
-                │ │ ╚══════════════════════╣  │  ╠═════════════════════╝ │ │
-                │ └────────────────────────┐  │  ┌───────────────────────┘ │
-                │                          │  │  │                         │
-                └──────────────────────────┘  │  └─────────────────────────┘
-                                              ▼
-                                            CLIENT
+      ┌──────────────────────────────────────────────────────────┐
+      │                            VPC                           │
+      │ ┌──────────────────────────────────────────────────────┐ │
+      │ │                 (2x PRIVATE SUBNETS)                 │ │
+      │ │   ┌──────────────────────────────────────────────┐   │ │
+      │ │   │               TIER I - DATABASE              │   │ │
+      │ │   └───┐ ┌─────────┐ ┌──────────┐ ┌─────────┐ ┌───┘   │ │
+      │ │        │           │            │           │        │ │
+      │ │     DB_NAME     DB_PORT      DB_USER     DB_PASS     │ │
+      │ │        │           │            │           │        │ │
+      │ │        ▼           ▼            ▼           ▼        │ │
+      │ │ ╔═════╣ ╠═════════╣ ╠══════════╣ ╠═════════╣ ╠═════╗ │ │
+      │ │ ║                                                  ║ │ │
+      │ │ ║                   (EKS CLUSTER)                  ║ │ │
+      │ │ ║                                                  ║ │ │
+      │ │ ║  ┌──┘ └─────────┘ └──────────┘ └─────────┘ └──┐  ║ │ │
+      │ │ ║  │               TIER II - API                │  ║ │ │
+      │ │ ║  └─────────┐ ┌────────────────────┐ ┌─────────┘  ║ │ │
+      │ │ ║             ▲                      ▲             ║ │ │
+      │ │ ║             │                      │             ║ │ │
+      │ └─║───────────┤ │ ├──────────────────┤ │ ├───────────║─┘ │
+      │   ║             │                      │             ║   │
+      │   ║          API_HOST               API_PORT         ║   │
+      │   ║             │                      │             ║   │
+      │ ┌─║───────────┤ │ ├──────────────────┤ │ ├───────────║─┐ │
+      │ │ ║             │ (2x PUBLIC  SUBNETS) │             ║ │ │
+      │ │ ║  ┌─────────┘ └────────────────────┘ └─────────┐  ║ │ │
+      │ │ ║  │                TIER III - WEB              │  ║ │ │
+      │ │ ║  └─────────────────────┐ ┌────────────────────┘  ║ │ │
+      │ │ ║                                                  ║ │ │
+      │ │ ╚══════════════════════╣  ▲  ╠═════════════════════╝ │ │
+      │ └────────────────────────┐  │  ┌───────────────────────┘ │
+      │                          │  │  │                         │
+      └──────────────────────────┘  │  └─────────────────────────┘
+                                    │
+                                  CLIENT
 ```
 
 ---
 
-### Steps
+## Summary
 
-> 1. CI via GitHub Actions with linter, scanners and containerization
->    - ESLint
->    - Prettier
->    - Docker
->    - Trivy
->    - SonarQube
-> 2. CD/CD with Three-Tier Architecture on AWS, using Terraform
->    - VPC
->    - RDS: Aurora PostgreSQL 15.3 (Serverless v2)
->    - EKS
->      - ArgoCD
->      - Helm Charts
->        - API Application
->        - WEB Application
->        - NGINX Ingress Controller
->        - EBS CSI Driver (For AWS)
->        - Grafana & Prometheus
->        - Loki
->        - HashiCorp Vault
->        - AppArmor
+> 1. First of all, local tests.
+>
+> - Setting up a _Linux_ environment through **Docker**/**QEMU/KVM**
+> - Installing **PostgreSQL**
+> - Running applications within this setup
 
----
+> 2. CI (Continuous Integration) via GitHub Actions. Applications are check by linters, tests, scanners and built into an image.
+> - ESLint           (Code linter)
+> - Prettier         (Code formatter)
+> - Tests            (Unit, integration)
+> - SonarQube        (Static Code Analys)
+> - Build via Docker (Alpine: minimal secure base)
+> - Trivy            (Container security scanner)
 
-## Step I - Local tests
-
-Developers gave me the code of applications without documentation:
-
-- Applications require **PostgreSQL** database to function correctly
-- Setting up a _Linux_ environment through **Docker**/**VirtualBox**
-- Installing **PostgreSQL** and successfully running applications within this setup **LOCALLY**
-
----
-
-## Step II - CI (Continuous Integration)
-
-Workflows for **API** & **WEB** applications:
-
-- Run **ESLint** linter
-- Run **Prettier**
-- _Node.js_ **dependencies**
-- Run **tests**
-- Build via **Docker**
-- **Trivy** vulnerability scann
-- **SonarQube** code scan
-
-## Step III ─ CD (Continuous Delivery)
-
-1. Something
-2. Something
-3. Something
-4. Something
+> 2. CD (Continious Delivery/Deployment) via GitHub Actions. Create a Three-tier architecture on AWS and deploy applications using GitOps practices.
+> - VPC Module
+> - RDS Module
+>   - Aurora PostgreSQL 15.3 (Serverless v2)
+> - EKS Module
+>   - Helm         (Package manager)
+>   - ArgoCD       (GitOps delivery)
+>     - API Application
+>     - WEB Application
+>     - NGINX Ingress Controller
+>     - EBS CSI Driver
+>     - Grafana    (Visualization)
+>     - Prometheus (Nodes metrics)
+>     - Loki       (Storage for Loggs)
+>     - Promtail   (Loggs)
+>     - Falco      (Security monitoring)
+>     - Velero     (Snapshots)
+>     - HashiCorp Vault (Secrets manager)
 
 ---
 

@@ -1,4 +1,0 @@
-apiVersion: v2
-name: apparmor-profiles
-description: Kubernetes AppArmor Profiles for Security Enhancement
-version: 0.1.0

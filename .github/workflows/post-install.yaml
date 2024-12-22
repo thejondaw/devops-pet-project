@@ -9,12 +9,12 @@ on:
         default: "develop"
         type: choice
         options: [develop, stage, master]
-  push:
-    branches: ["master", "stage", "develop"]
-    paths:
-      - "helm/**"
-      - ".github/workflows/post-install.yaml"
-      - "scripts/post-install.sh"
+  # push:
+  #   branches: ["master", "stage", "develop"]
+  #   paths:
+  #     - "helm/**"
+  #     - ".github/workflows/post-install.yaml"
+  #     - "scripts/post-install.sh"
 
 env:
   AWS_REGION: us-east-2

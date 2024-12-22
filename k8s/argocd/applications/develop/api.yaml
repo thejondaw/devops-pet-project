@@ -8,13 +8,13 @@ spec:
   source:
     repoURL: https://github.com/thejondaw/devops-project.git
     path: helm/charts/api
-    targetRevision: develop
+    targetRevision: app
     helm:
       valueFiles:
-        - ../../environments/develop/values.yaml
+        - ../../environments/app/values.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: develop
+    namespace: app
   syncPolicy:
     automated:
       prune: true

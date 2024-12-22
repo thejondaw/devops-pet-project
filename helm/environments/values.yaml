@@ -1,7 +1,7 @@
 api:
   replicaCount: 1
   image:
-    tag: develop
+    tag: app
   database:
     host: ""
     port: "5432"
@@ -12,11 +12,11 @@ api:
 web:
   replicaCount: 1
   image:
-    tag: develop
+    tag: app
   api:
-    host: "http://develop-api-svc"
+    host: "http://app-api-svc"
 
 vault:
   server:
     serviceAccount:
-      roleArn: "arn:aws:iam::529088295850:role/develop-vault-role"
+      roleArn: "arn:aws:iam::529088295850:role/app-vault-role"
