@@ -18,7 +18,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm install --only=production --legacy-peer-deps && \
     npm cache clean --force && \
-    rm -rf /usr/local/lib/node_modules/npm
+    rm -rf /tmp/* /var/cache/apk/*
 COPY . .
 ENV PORT=3000 \
     DBUSER='' \
@@ -28,4 +28,4 @@ ENV PORT=3000 \
     DBPORT=5432
 USER node
 EXPOSE 3000
-CMD [ "node", "./src/bin/www" ]
+CMD [ "node", "start" ]
