@@ -16,7 +16,7 @@
 FROM node:14-alpine
 WORKDIR /usr/src/app
 COPY package*.json ./
-RUN npm ci --only=production --legacy-peer-deps && \
+RUN npm install --only=production --legacy-peer-deps && \
     npm cache clean --force && \
     rm -rf /usr/local/lib/node_modules/npm
 COPY . .
