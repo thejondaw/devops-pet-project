@@ -4,14 +4,28 @@ updates:
     directory: "/apps/api"
     schedule:
       interval: "daily"
-    ignore:
-      - dependency-name: "*"  # Игнорируем автоматические обновления
-    open-pull-requests-limit: 0  # Не создаем PR's
+    # Отключаем автоматические PR's
+    open-pull-requests-limit: 0
+    # Только алерты безопасности, без автоматических обновлений
+    allow:
+      - dependency-type: "production"
+      - dependency-type: "development"
+    commit-message:
+      prefix: "security"
+    labels:
+      - "security"
+      - "dependencies"
 
   - package-ecosystem: "npm"
     directory: "/apps/web"
     schedule:
       interval: "daily"
-    ignore:
-      - dependency-name: "*"
     open-pull-requests-limit: 0
+    allow:
+      - dependency-type: "production"
+      - dependency-type: "development"
+    commit-message:
+      prefix: "security"
+    labels:
+      - "security"
+      - "dependencies"
