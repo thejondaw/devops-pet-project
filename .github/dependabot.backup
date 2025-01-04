@@ -4,9 +4,7 @@ updates:
     directory: "/apps/api"
     schedule:
       interval: "daily"
-    # Отключаем автоматические PR's
     open-pull-requests-limit: 0
-    # Только алерты безопасности, без автоматических обновлений
     allow:
       - dependency-type: "production"
       - dependency-type: "development"
