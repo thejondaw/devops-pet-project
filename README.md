@@ -55,36 +55,36 @@ Enterprise-grade deployment of a three-tier architecture using modern DevOps pra
 
 > 1. First of all, local tests.
 >
-> - Setting up a _Linux_ environment through **Docker**/**QEMU/KVM**
-> - Installing **PostgreSQL**
-> - Running applications within this setup
+> - [x] Setting up a _Linux_ environment through **Docker**/**QEMU/KVM**
+> - [x] Installing **PostgreSQL**
+> - [x] Running applications within this setup
 
-> 2. **CI** (*Continuous Integration*) via **GitHub Actions**. Applications are check by *linters*, *tests*, *scanners* and built into an *image*.
-> - **ESLint**           *(Code linter)*
-> - **Prettier**         *(Code formatter)*
-> - **Tests**            *(Unit, integration)*
-> - **SonarQube**        *(Static Code Analys)*
-> - **Build via Docker** *(Alpine: minimal secure base)*
-> - **Trivy**            *(Container security scanner)*
+> 2. **CI** *(Continuous Integration)* via **GitHub Actions**. Applications are checked by *linters*, *tests*, *scanners*, and built into an *image*.
+> - [x] **ESLint**              *(Code linter)*
+> - [x] **Prettier**            *(Code formatter)*
+> - [x] **Tests**               *(Unit, integration)*
+> - [x] **SonarQube**           *(Static Code Analysis)*
+> - [x] **Build via Docker**    *(Alpine: minimal secure base)*
+> - [x] **Trivy**               *(Container security scanner)*
 
-> 2. **CD** (*Continious Delivery/Deployment*) via **GitHub Actions**. Create a *Three-tier* architecture on *AWS* and deploy applications using *GitOps* practices.
-> - **VPC** Module
-> - **RDS** Module
->   - *Aurora PostgreSQL 15.3 (Serverless v2)*
-> - **EKS** Module
->   - **Helm**         *(Package manager)*
->   - **ArgoCD**       *(GitOps delivery)*
->     - **API** Application
->     - **WEB** Application
->     - **NGINX Ingress Controller**
->     - **EBS CSI Driver**
->     - **Grafana**    *(Visualization)*
->     - **Prometheus** *(Nodes metrics)*
->     - **Loki**       *(Storage for Loggs)*
->     - **Promtail**   *(Loggs)*
->     - **Falco**      *(Security monitoring)*
->     - **Velero**     *(Snapshots)*
->     - **HashiCorp Vault** *(Secrets manager)*
+> 3. **CD** *(Continuous Delivery/Deployment)* via **GitHub Actions**. Create a *Three-tier* architecture on *AWS* and deploy applications using *GitOps* practices.
+> - [x] **VPC** Module
+> - [x] **RDS** Module
+>   - [x] **Aurora PostgreSQL 15.3 (Serverless v2)**
+> - [x] **EKS** Module
+>   - [x] **Helm**              *(Package manager)*
+>   - [x] **ArgoCD**            *(GitOps delivery)*
+>     - [ ] **API** Application
+>     - [ ] **WEB** Application
+>     - [x] **NGINX Ingress Controller**
+>     - [x] **EBS CSI Driver**
+>     - [x] **HashiCorp Vault** *(Secrets manager)*
+>     - [x] **Grafana**         *(Visualization)*
+>     - [x] **Prometheus**      *(Nodes metrics)*
+>     - [x] **Loki**            *(Storage for Logs)*
+>     - [x] **Promtail**        *(Logs)*
+>     - [ ] **Falco**           *(Security monitoring)*
+>     - [ ] **Velero**          *(Snapshots)*
 
 ---
 
