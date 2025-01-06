@@ -1,7 +1,3 @@
-# ==================================================== #
-# ================= OUTPUTS Of ROOT ================== #
-# ==================================================== #
-
 # Output - VPC - ID
 output "vpc_id" {
   description = "VPC ID"
@@ -37,5 +33,3 @@ output "namespaces" {
   description = "Created namespaces"
   value       = module.tools.namespaces
 }
-
-# ==================================================== #

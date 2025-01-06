@@ -1,7 +1,3 @@
-# ==================================================== #
-# ============== VARIABLES OF VPC MODULE ============= #
-# ==================================================== #
-
 # Variable - AWS Region
 variable "region" {
   description = "AWS Region"
@@ -50,4 +46,9 @@ variable "vpc_configuration" {
   }
 }
 
-# ==================================================== #
+# Variable - Allowed IPs
+variable "allowed_ips" {
+  description = "List of allowed IP ranges for web access"
+  type        = list(string)
+  default     = ["YOUR.OFFICE.IP/32", "YOUR.VPN.IP/32"]
+}

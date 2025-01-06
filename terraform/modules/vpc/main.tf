@@ -1,7 +1,3 @@
-# ==================================================== #
-# ==================== VPC MODULE ==================== #
-# ==================================================== #
-
 # VPC (Virtual Private Cloud)
 resource "aws_vpc" "main" {
   cidr_block       = var.vpc_configuration.cidr
@@ -19,8 +15,17 @@ resource "aws_vpc" "main" {
 
 # Public Subnet #1 - WEB
 resource "aws_subnet" "subnet_web" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = var.vpc_configuration.subnets.web.cidr_block
+  vpc_id     = aws_vpc.main.id
+  cidr_block = var.vpc_configuration.subnets.web.cidr_block
+  # We need auto-assign public IPs for EKS worker nodes to:
+  # - Pull container images
+  # - Access AWS services
+  # - Connect to the internet for updates
+  # In production consider:
+  # - Using private subnets with NAT Gateway
+  # - Implementing container image caching
+  # - Setting up VPC endpoints for AWS services
+  #tfsec:ignore:aws-ec2-no-public-ip-subnet
   map_public_ip_on_launch = true
   availability_zone       = var.vpc_configuration.subnets.web.az
 
@@ -31,13 +36,61 @@ resource "aws_subnet" "subnet_web" {
     ManagedBy   = "terraform"
     Type        = "public"
     Tier        = "web"
+    # Adding required tags for EKS
+    "kubernetes.io/role/elb"                    = "1"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+  }
+}
+
+# Consider adding these security controls:
+resource "aws_network_acl" "web" {
+  vpc_id     = aws_vpc.main.id
+  subnet_ids = [aws_subnet.subnet_web.id]
+
+  # Restrict inbound traffic
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 80
+    to_port    = 80
+  }
+
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 110
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 443
+    to_port    = 443
+  }
+
+  # Allow outbound traffic with ephemeral ports
+  egress {
+    protocol   = -1
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 0
+  }
+
+  tags = {
+    Name        = "web-nacl"
+    Environment = var.environment
   }
 }
 
 # Public Subnet #2 - ALB
 resource "aws_subnet" "subnet_alb" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = var.vpc_configuration.subnets.alb.cidr_block
+  vpc_id     = aws_vpc.main.id
+  cidr_block = var.vpc_configuration.subnets.alb.cidr_block
+  # Public IP required for ALB to:
+  # - Accept inbound traffic from internet
+  # - Route traffic to backend services
+  # - Support SSL termination
+  #tfsec:ignore:aws-ec2-no-public-ip-subnet
   map_public_ip_on_launch = true
   availability_zone       = var.vpc_configuration.subnets.alb.az
 
@@ -48,6 +101,59 @@ resource "aws_subnet" "subnet_alb" {
     ManagedBy   = "terraform"
     Type        = "public"
     Tier        = "alb"
+    # Required tag for ALB auto-discovery
+    "kubernetes.io/role/elb" = "1"
+  }
+}
+
+# NACL for ALB subnet
+resource "aws_network_acl" "alb" {
+  vpc_id     = aws_vpc.main.id
+  subnet_ids = [aws_subnet.subnet_alb.id]
+
+  # Allow HTTP
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 80
+    to_port    = 80
+  }
+
+  # Allow HTTPS
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 110
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 443
+    to_port    = 443
+  }
+
+  # Allow health check responses
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 120
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 1024
+    to_port    = 65535
+  }
+
+  # Allow all outbound traffic
+  egress {
+    protocol   = -1
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 0
+  }
+
+  tags = {
+    Name        = "alb-nacl"
+    Environment = var.environment
   }
 }
 
@@ -180,45 +286,73 @@ resource "aws_route_table_association" "Private_2" {
 
 # ================== SECURITY GROUP ================== #
 
-# Security Group - Connection Access
+# Main Security Group for VPC traffic
 resource "aws_security_group" "sec_group_vpc" {
   name        = "sec-group-vpc"
-  description = "Allow incoming HTTP Connections"
+  description = "Security group for VPC web and internal access"
   vpc_id      = aws_vpc.main.id
 
-  # HTTP
+  # HTTP - restrict to known IPs or your office range instead of 0.0.0.0/0
   ingress {
-    description = "Allow incoming HTTP for redirect to HTTPS"
+    description = "HTTP from allowed IPs"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = var.allowed_ips # Add this variable with your safe IPs
   }
 
-  # HTTPS
+  # HTTPS - same approach
   ingress {
-    description = "Allow incoming HTTPS"
+    description = "HTTPS from allowed IPs"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = var.allowed_ips
   }
 
-  # SSH
+  # SSH - keep VPC-only
   ingress {
-    description = "Allow SSH from only our VPC"
+    description = "SSH from VPC only"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = [var.vpc_configuration.cidr]
   }
 
-  # Allow all Outbound Traffic
+  # Required outbound rules
   egress {
+    description = "HTTPS outbound"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    #tfsec:ignore:aws-ec2-no-public-egress-sgr
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    description = "HTTP outbound"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    #tfsec:ignore:aws-ec2-no-public-egress-sgr
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    description = "DNS"
+    from_port   = 53
+    to_port     = 53
+    protocol    = "udp"
+    #tfsec:ignore:aws-ec2-no-public-egress-sgr
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    description = "VPC internal"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.vpc_configuration.cidr]
   }
 
   tags = {
@@ -229,5 +363,3 @@ resource "aws_security_group" "sec_group_vpc" {
     Type        = "vpc-security"
   }
 }
-
-# ==================================================== #

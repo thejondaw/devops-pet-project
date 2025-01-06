@@ -1,26 +1,32 @@
-# ==================================================== #
-# ==================== ROOT MAIN ===================== #
-# ==================================================== #
+# Set required Terraform version and providers
+terraform {
+  required_version = ">= 1.0.0, < 2.0.0"
 
-# AWS Region
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
 provider "aws" {
   region = var.region
 }
 
-# ================== CUSTOM MODULES ================== #
-
-# BACKEND - Module
+# BACKEND Module
 module "backend" {
-  source = "../terraform/modules/backend"
+  source  = "../../modules/backend/"
+  version = "1.0.0"
 
-  environment = var.environment
-  region      = var.region
-  bucket_name = var.backend_bucket
+  environment    = var.environment
+  region         = var.region
+  backend_bucket = var.backend_bucket
 }
 
-# VPC - Module
+# VPC Module
 module "vpc" {
-  source = "../terraform/modules/vpc"
+  source = "../../modules/vpc"
 
   environment       = var.environment
   region            = var.region
@@ -29,37 +35,34 @@ module "vpc" {
   depends_on = [module.backend]
 }
 
-# RDS - Module
+# RDS Module
 module "rds" {
-  source = "../terraform/modules/rds"
+  source = "../../modules/rds"
 
+  region           = var.region
   environment      = var.environment
   db_configuration = var.db_configuration
 
   depends_on = [module.vpc]
 }
 
-# EKS - Module
+# EKS Module
 module "eks" {
-  source = "../terraform/modules/eks"
+  source = "../../modules/eks"
 
-  environment           = var.environment
-  cluster_configuration = var.eks_configuration
+  region            = var.region
+  environment       = var.environment
+  eks_configuration = var.eks_configuration
 
   depends_on = [module.vpc]
 }
 
-# TOOLS - Module
+# TOOLS Module
 module "tools" {
   source = "../../modules/tools"
 
   region      = var.region
   environment = var.environment
-  environment_configuration = {
-    namespaces = ["develop", "stage", "prod"]
-  }
 
   depends_on = [module.eks]
 }
-
-# ==================================================== #

@@ -1,7 +1,3 @@
-# ==================================================== #
-# ============== VARIABLES OF ECS MODULE ============= #
-# ==================================================== #
-
 # Variable - AWS Region
 variable "region" {
   description = "AWS Region"
@@ -34,5 +30,3 @@ variable "eks_configuration" {
     error_message = "Kubernetes version must be between 1.23 and 1.28."
   }
 }
-
-# ==================================================== #

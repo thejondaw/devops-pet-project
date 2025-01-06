@@ -1,15 +1,10 @@
-# ==================================================== #
-# =========== S3 BUCKET FOR BACKEND OF RDS =========== #
-# ==================================================== #
-
 # S3 Bucket - Backend
 terraform {
+  required_version = ">= 1.0.0"
   backend "s3" {
     bucket  = "alexsuff"
-    key     = "project/develop/rds.tfstate"
+    key     = "project/develop/eks.tfstate"
     region  = "us-east-2"
     encrypt = true
   }
 }
-
-# ==================================================== #

@@ -1,7 +1,3 @@
-# ==================================================== #
-# =================== RDS Outputs ==================== #
-# ==================================================== #
-
 # Output - DB - Endpoint
 output "db_endpoint" {
   description = "RDS cluster endpoint"
@@ -19,5 +15,3 @@ output "secret_name" {
   description = "Name of the secret in AWS Secrets Manager"
   value       = aws_secretsmanager_secret.aurora_secret.name
 }
-
-# ==================================================== #

@@ -1,7 +1,3 @@
-# ==================================================== #
-# ================ VARIABLES Of TOOLS ================ #
-# ==================================================== #
-
 # Variable - AWS Region
 variable "region" {
   description = "AWS Region"
@@ -15,21 +11,6 @@ variable "environment" {
   validation {
     condition     = contains(["app"], var.environment)
     error_message = "Environment must be develop, stage, or prod."
-  }
-}
-
-# Variable - Environment Configuration - Namespaces
-variable "environment_configuration" {
-  description = "Environment configuration for namespaces"
-  type = object({
-    namespaces = list(string)
-  })
-  default = {
-    namespaces = ["app"]
-  }
-  validation {
-    condition     = length(var.environment_configuration.namespaces) > 0
-    error_message = "At least one namespace must be specified."
   }
 }
 
@@ -51,5 +32,3 @@ variable "argocd_server_service" {
     source_ranges        = ["0.0.0.0/0"]
   }
 }
-
-# ==================================================== #

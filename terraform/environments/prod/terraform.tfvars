@@ -1,7 +1,3 @@
-# ==================================================== #
-# ================= YOUR CREDENTIALS ================= #
-# ==================================================== #
-
 # Set - AWS Region
 region = "us-east-2"
 
@@ -9,7 +5,7 @@ region = "us-east-2"
 backend_bucket = "alexsuff"
 
 # Set - Environment - Name
-environment = "develop"
+environment = "prod"
 
 # Set - VPC & Subnets - Configuration
 vpc_configuration = {
@@ -49,5 +45,3 @@ eks_configuration = {
   instance_types = ["t3.medium"]
   disk_size      = 20
 }
-
-# ==================================================== #

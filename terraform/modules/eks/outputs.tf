@@ -1,7 +1,3 @@
-# ==================================================== #
-# ================== OUTPUTS OF EKS ================== #
-# ==================================================== #
-
 # Output - Cluster - Endpoint
 output "cluster_endpoint" {
   description = "EKS cluster endpoint"
@@ -25,5 +21,3 @@ output "cluster_certificate_authority" {
   description = "Certificate authority data for cluster authentication"
   value       = aws_eks_cluster.study.certificate_authority[0].data
 }
-
-# ==================================================== #

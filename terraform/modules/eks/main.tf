@@ -1,7 +1,3 @@
-# ==================================================== #
-# ==================== EKS MODULE ==================== #
-# ==================================================== #
-
 # Timestamp - Unique Naming
 resource "time_static" "cluster_timestamp" {}
 
@@ -85,11 +81,6 @@ data "aws_subnet" "api" {
   }
 }
 
-# Fetch - Existing User
-data "aws_iam_user" "existing_user" {
-  user_name = "devops-project"
-}
-
 # Fetch - Current Region
 data "aws_region" "current" {}
 
@@ -161,15 +152,28 @@ resource "aws_iam_role_policy" "node_group_ebs" {
           "ec2:CreateVolume",
           "ec2:DeleteVolume",
           "ec2:AttachVolume",
-          "ec2:DetachVolume",
+          "ec2:DetachVolume"
+        ]
+        # Restriction by Region and Account
+        Resource = [
+          "arn:aws:ec2:${var.region}:${data.aws_caller_identity.current.account_id}:volume/*"
+        ]
+        Condition = {
+          # For specific Taggs
+          StringEquals = {
+            "aws:RequestTag/Environment" : var.environment,
+            "aws:RequestTag/ManagedBy" : "terraform"
+          }
+        }
+      },
+      {
+        Effect = "Allow"
+        Action = [
           "ec2:DescribeVolumes",
-          "ec2:CreateSnapshot",
-          "ec2:DeleteSnapshot",
           "ec2:DescribeSnapshots",
-          "ec2:CreateTags",
-          "ec2:DeleteTags",
           "ec2:DescribeTags"
         ]
+
         Resource = "*"
       }
     ]
@@ -194,12 +198,20 @@ resource "aws_iam_role_policy_attachment" "node_group_minimum_policies" {
 resource "aws_cloudwatch_log_group" "eks" {
   name              = "/aws/eks/${local.cluster_name}/cluster"
   retention_in_days = 7
+  kms_key_id        = aws_kms_key.cloudwatch.arn
 
   tags = merge(local.common_tags, {
     Name      = "${local.cluster_name}-logs"
     LogType   = "EKS-Cluster-Logs"
     Retention = "7-days"
   })
+}
+
+# KMS Key for Cloudwatch Log Encryption
+resource "aws_kms_key" "cloudwatch" {
+  description             = "CloudWatch Log Encryption"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 # ================== EKS CLUSTER =================== #
@@ -210,6 +222,7 @@ resource "aws_eks_cluster" "study" {
   role_arn = aws_iam_role.eks_cluster.arn
   version  = var.eks_configuration.version
 
+  #tfsec:ignore:aws-eks-no-public-cluster-access-to-cidr
   vpc_config {
     subnet_ids = [
       data.aws_subnet.web.id,
@@ -217,10 +230,25 @@ resource "aws_eks_cluster" "study" {
       data.aws_subnet.api.id
     ]
     endpoint_private_access = true
-    endpoint_public_access  = true
+    #tfsec:ignore:aws-eks-no-public-cluster-access
+    endpoint_public_access = true
+    # public_access_cidrs    = ["YOUR.OFFICE.IP/32"] # Your Office IP
   }
 
-  enabled_cluster_log_types = ["api"]
+  encryption_config {
+    provider {
+      key_arn = aws_kms_key.eks.arn
+    }
+    resources = ["secrets"]
+  }
+
+  enabled_cluster_log_types = [
+    "api",
+    "audit",
+    "authenticator",
+    "controllerManager",
+    "scheduler"
+  ]
 
   depends_on = [
     aws_cloudwatch_log_group.eks,
@@ -233,6 +261,13 @@ resource "aws_eks_cluster" "study" {
     Version      = var.eks_configuration.version
     Architecture = "Multi-AZ"
   })
+}
+
+# KMS Key for encryption
+resource "aws_kms_key" "eks" {
+  description             = "EKS Secret Encryption Key"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 # =================== NODE GROUP =================== #
@@ -271,5 +306,3 @@ resource "aws_eks_node_group" "study" {
     AutoScaling   = "Enabled"
   })
 }
-
-# ==================================================== #

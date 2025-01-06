@@ -1,7 +1,3 @@
-# ==================================================== #
-# ============== VARIABLES OF RDS MODULE ============= #
-# ==================================================== #
-
 # Variable - AWS Region
 variable "region" {
   description = "AWS Region"
@@ -33,5 +29,3 @@ variable "db_configuration" {
     error_message = "Database port must be between 1024 and 65535."
   }
 }
-
-# ==================================================== #

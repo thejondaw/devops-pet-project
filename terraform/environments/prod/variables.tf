@@ -1,7 +1,3 @@
-# ==================================================== #
-# ================ VARIABLES OF ROOT ================= #
-# ==================================================== #
-
 # Variable - AWS Region
 variable "region" {
   description = "AWS Region"
@@ -10,7 +6,7 @@ variable "region" {
 
 # Variable - Environment
 variable "environment" {
-  description = "Environment name (develop, stage, prod)"
+  description = "Environment name (dev, stage, prod)"
   type        = string
 }
 
@@ -52,6 +48,7 @@ variable "db_configuration" {
   type = object({
     name     = string
     username = string
+    port     = number
   })
   sensitive = true
 }
@@ -64,7 +61,6 @@ variable "eks_configuration" {
     min_size       = number
     max_size       = number
     instance_types = list(string)
+    disk_size      = number
   })
 }
-
-# ==================================================== #

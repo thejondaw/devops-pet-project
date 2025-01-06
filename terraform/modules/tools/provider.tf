@@ -1,10 +1,11 @@
-# ==================================================== #
-# ================ PROVIDERS OF TOOLS ================ #
-# ==================================================== #
-
 # Provider - Terraform
 terraform {
+  required_version = ">= 1.0.0"
   required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
     kubernetes = {
       source  = "hashicorp/kubernetes"
       version = "~> 2.23.0"
@@ -70,10 +71,3 @@ data "aws_eks_cluster" "cluster" {
     if can(regex("^${var.environment}-cluster-", cluster_name))
   ][0]
 }
-
-# Fetch - EKS Cluster - Auth
-data "aws_eks_cluster_auth" "cluster" {
-  name = data.aws_eks_cluster.cluster.name
-}
-
-# ==================================================== #
