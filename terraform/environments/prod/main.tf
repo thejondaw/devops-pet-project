@@ -19,7 +19,6 @@ module "backend" {
   source  = "../../modules/backend/"
   version = "1.0.0"
 
-  environment    = var.environment
   region         = var.region
   backend_bucket = var.backend_bucket
 }
