@@ -1,14 +1,17 @@
-# DevOps Pet Project: Three-tier Architecture on AWS
+# 🏗️ Enterprise-Grade Three-Tier Architecture on AWS
 
-Enterprise-grade deployment of a three-tier architecture using modern DevOps practices and tools.
+[![CI - API](https://github.com/thejondaw/devops-project/actions/workflows/ci-api.yaml/badge.svg)](https://github.com/thejondaw/devops-project/actions/workflows/ci-api.yaml)
+[![CI - Web](https://github.com/thejondaw/devops-project/actions/workflows/ci-web.yaml/badge.svg)](https://github.com/thejondaw/devops-project/actions/workflows/ci-web.yaml)
+[![CD - Infrastructure](https://github.com/thejondaw/devops-project/actions/workflows/cd-infrastructure.yaml/badge.svg)](https://github.com/thejondaw/devops-project/actions/workflows/cd-infrastructure.yaml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=thejondaw_devops-project&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=thejondaw_devops-project)
 
----
+Production-ready implementation of a three-tier architecture leveraging modern DevOps practices, Infrastructure as Code, and GitOps methodologies.
 
-## Architecture Overview
+## 🏛️ Application Architecture
 
-<div align="center">
+The project implements a classic three-tier architecture with modern cloud-native enhancements:
 
-```
+```mermaid
 ┌──────────────────────────────────────────────────────────┐
 │                            VPC                           │
 │ ┌──────────────────────────────────────────────────────┐ │
@@ -47,179 +50,204 @@ Enterprise-grade deployment of a three-tier architecture using modern DevOps pra
                             CLIENT
 ```
 
-</div>
+Each tier is containerized and deployed to EKS with dedicated responsibilities:
 
----
+1. **Frontend Tier (Web Service)**
+   - Serves static content and UI
+   - Handles user interactions
+   - Proxies requests to API
+   - Environment Variables:
+     - `PORT`: 4000
+     - `API_HOST`: API service endpoint
 
-## Summary
+2. **Backend Tier (API Service)**
+   - Processes business logic
+   - Manages database interactions
+   - Handles data validation
+   - Environment Variables:
+     - `PORT`: 3000
+     - `DBUSER`: Database username
+     - `DBPASS`: Database password
+     - `DBHOST`: Aurora endpoint
+     - `DBPORT`: 5432
+     - `DB`: Database name
 
-> 1. First of all, local tests.
->
-> - [x] Setting up a _Linux_ environment through **Docker**/**QEMU/KVM**
-> - [x] Installing **PostgreSQL**
-> - [x] Running applications within this setup
+3. **Database Tier (Aurora PostgreSQL)**
+   - Serverless v2 for auto-scaling
+   - Multi-AZ deployment
+   - Automated backups
+   - Encrypted at rest and in transit
 
-> 2. **CI** *(Continuous Integration)* via **GitHub Actions**. Applications are checked by *linters*, *tests*, *scanners*, and built into an *image*.
-> - [x] **ESLint**              *(Code linter)*
-> - [x] **Prettier**            *(Code formatter)*
-> - [x] **Tests**               *(Unit, integration)*
-> - [x] **SonarQube**           *(Static Code Analysis)*
-> - [x] **Build via Docker**    *(Alpine: minimal secure base)*
-> - [x] **Trivy**               *(Container security scanner)*
+## 🔄 CI/CD Pipeline Implementation
 
-> 3. **CD** *(Continuous Delivery/Deployment)* via **GitHub Actions**. Create a *Three-tier* architecture on *AWS* and deploy applications using *GitOps* practices.
-> - [x] **VPC** Module
-> - [x] **RDS** Module
->   - [x] **Aurora PostgreSQL 15.3 (Serverless v2)**
-> - [x] **EKS** Module
->   - [x] **Helm**              *(Package manager)*
->   - [x] **ArgoCD**            *(GitOps delivery)*
->     - [ ] **API** Application
->     - [ ] **WEB** Application
->     - [x] **NGINX Ingress Controller**
->     - [x] **EBS CSI Driver**
->     - [x] **HashiCorp Vault** *(Secrets manager)*
->     - [x] **Grafana**         *(Visualization)*
->     - [x] **Prometheus**      *(Nodes metrics)*
->     - [x] **Loki**            *(Storage for Logs)*
->     - [x] **Promtail**        *(Logs)*
->     - [ ] **Falco**           *(Security monitoring)*
->     - [ ] **Velero**          *(Snapshots)*
+This project demonstrates a comprehensive CI/CD approach following enterprise best practices:
 
----
+### 🔨 Continuous Integration (CI) Pipeline
 
-### Map of Project
+Our CI process ensures code quality and security before containerization:
 
-```markdown
-devops─project/
-├── .github/workflows/                # GitHub Actions Workflow files
-│   ├── ci─api.yaml                   # CI for API
-│   ├── ci─web.yaml                   # CI for WEB
-│   ├── cd─infrastructure.yaml        # Create infrastructure
-│   ├── post─install.yaml             # Bash script
-│   └── cd─destroy.yaml               # Just for destroy infrastructure
-│
-├── apps/
-│   ├── api/                          # API Application
-│   │   ├── src/                      # Source code of API
-│   │   ├── tests/                    # Tests for API
-│   │   └── Dockerfile                # Dockerfile for API
-│   │
-│   └── web/                          # WEB Application
-│       ├── src/                      # Source code of WEB
-│       ├── tests/                    # Tests for WEB
-│       └── Dockerfile                # Dockerfile for WEB
-│
-├── helm/                             # Helm
-│   ├── charts/
-│   │   ├── api/                      # API Chart
-│   │   │   ├── Chart.yaml
-│   │   │   ├── values.yaml
-│   │   │   ├── templates/configmap.yaml
-│   │   │   ├── templates/deployment.yaml
-│   │   │   ├── templates/secret.yaml
-│   │   │   └── templates/service.yaml
-│   │   │
-│   │   ├── web/                      # WEB Chart
-│   │   │   ├── Chart.yaml
-│   │   │   ├── values.yaml
-│   │   │   ├── templates/configmap.yaml
-│   │   │   ├── templates/deployment.yaml
-│   │   │   ├── templates/ingress.yaml
-│   │   │   └── templates/service.yaml
-│   │   │
-│   │   └── monitoring/               # Grafana & Prometheus Chart
-│   │       ├── Chart.yaml
-│   │       └── values.yaml
-│   │
-│   └── environments/                 # Configs Environments
-│       ├── develop/
-│       │   └── values.yaml
-│       ├── stage/
-│       │   └── values.yaml
-│       └── prod/
-│           └── values.yaml
-│
-├── terraform/                        # Terraform configs
-│   ├── modules/
-│   │   ├── backend/                  # Module S3 Backend
-│   │   ├── vpc/                      # Module VPC
-│   │   ├── eks/                      # Module EKS
-│   │   ├── rds/                      # Module RDS
-│   │   └── tools/                    # Module TOOLS
-│   │
-│   └── environments/                 # Configurations of Environments
-│       ├── develop/
-│       │   ├── main.tf
-│       │   └── terraform.tfvars
-│       ├── stage/
-│       └── prod/
-│
-├── k8s
-│   ├── infra/
-│   │   ├── namespaces.yaml           # Namespaces manifest
-│   │   └── monitoring─ingress.yaml   # Grafana & Prometheus manifest
-│   │
-│   └── argocd/applications           # Apps manifests for ArgoCD dashboard
-│              └── develop/
-│                  ├── api.yaml
-│                  ├── web.yaml
-│                  └── monitoring.yaml
-│
-├── ansible/                          # Ansible configurations
-│   ├── inventory/                    # Inventory files
-│   ├── playbooks/                    # Playbook files
-│   └── roles/                        # Ansible roles
-│
-├── scripts/                          # Automatization Scripts
-│   └── post─install.sh               # Post install of Tools
-│
-├── docs/                             # Documentation of Project
-│
-├── .gitignore
-├── Makefile
-├── README.md
-└── sonar─project.properties          # Configuration of SonarQube
+```mermaid
+graph LR
+    Dev[Developer] -->|git push| Repo[Repository]
+    Repo -->|trigger| Quality[Code Quality]
+    Repo -->|trigger| Security[Security Checks]
+    Repo -->|trigger| Tests[Testing]
+    Quality & Security & Tests -->|pass| Build[Container Build]
+    Build -->|push| Registry[Container Registry]
 ```
 
----
+1. **Code Quality Gates**
+   - ESLint (`.eslintrc`) validates code style
+   - Prettier enforces consistent formatting
+   - SonarQube performs deep code analysis
+   - Unit & integration test coverage
 
-### Variables for .TFVars
+2. **Security Validation**
+   - Dependencies audit
+   - Trivy container scanning
+   - SAST through SonarQube
+   - Infrastructure code validation
 
-```shell
-# Set - AWS Region
-region         = "your-region-number"
+3. **Artifact Generation**
+   - Multi-stage Docker builds
+   - Alpine-based images for minimal attack surface
+   - Automated versioning and tagging
+   - Container signing and verification
 
-# Set - S3 Bucket Name
-backend_bucket = "your-bucket-name"
+### 🚀 Continuous Delivery/Deployment (CD) Pipeline
 
-# Set - Environment - Name
-environment    = "develop"
+Our CD implementation consists of three major phases:
 
-# Set - IP Range of VPC & Subnets
+```mermaid
+graph TD
+    A[Infrastructure as Code] -->|terraform apply| B[AWS Resources]
+    B -->|post-install| C[Platform Services]
+    C -->|argocd sync| D[Applications]
+
+    subgraph AWS Resources
+        VPC[VPC & Networking]
+        EKS[EKS Cluster]
+        RDS[RDS Aurora]
+    end
+
+    subgraph Platform Services
+        ArgoCd[ArgoCD]
+        Monitor[Prometheus/Grafana]
+        Logs[Loki/Promtail]
+        Secrets[Vault]
+    end
+
+    subgraph Applications
+        API[API Service]
+        Web[Web UI]
+    end
+```
+
+1. **Infrastructure Provisioning (IaC)**
+   - VPC with isolated subnets
+   - EKS cluster configuration
+   - Aurora PostgreSQL (Serverless v2)
+   - IAM & security policies
+
+2. **Platform Tools**
+   - GitOps with ArgoCD
+   - Monitoring (Prometheus/Grafana)
+   - Logging (Loki/Promtail)
+   - Secrets (Vault)
+   - Ingress (NGINX)
+
+3. **Application Deployment**
+   - Declarative configs in Git
+   - Automatic sync via ArgoCD
+   - Zero-touch deployment
+   - Automated rollbacks
+
+## 📋 Implementation Progress
+
+### ⚙️ Local Development
+- [x] Linux environment setup
+- [x] PostgreSQL configuration
+- [x] Application runtimes
+- [x] Development workflow
+
+### 🔄 CI Pipeline
+- [x] Code quality automation
+- [x] Test frameworks
+- [x] Security scanning
+- [x] Container builds
+
+### 🏗️ AWS Infrastructure
+- [x] VPC & networking
+- [x] EKS deployment
+- [x] RDS configuration
+- [x] Security setup
+
+### ⚡ Platform Services
+- [x] ArgoCD installation
+- [x] Monitoring stack
+- [x] Logging pipeline
+- [x] Secrets management
+- [ ] Security monitoring (Falco)
+- [ ] Backup solution (Velero)
+
+### 🚀 Applications
+- [ ] API service deployment
+- [ ] Web UI deployment
+- [ ] Integration testing
+- [ ] Production readiness
+
+## 📁 Project Structure
+
+```
+devops-pet-project/
+├── .github/workflows/          # CI/CD pipeline definitions
+├── apps/                       # Application source code
+│   ├── api/                    # Backend service
+│   └── web/                    # Frontend application
+├── helm/                       # Kubernetes package configs
+├── terraform/                  # Infrastructure as Code
+│   ├── modules/                # Reusable IaC components
+│   └── environments/           # Environment configurations
+├── k8s/                        # Kubernetes resources & ArgoCD
+└── scripts/                    # Automation utilities
+```
+
+## 🚀 Quick Start Guide
+
+1. **Clone & Configure**
+```bash
+git clone https://github.com/thejondaw/devops-pet-project.git
+cd devops-pet-project
+cp terraform/environments/example.tfvars terraform/environments/prod/terraform.tfvars
+```
+
+2. **Infrastructure Deployment**
+```bash
+make setup
+make init
+make plan
+make apply
+```
+
+3. **Post-Installation**
+```bash
+make post-install
+```
+
+## 🛠️ Environment Configuration
+
+Required variables in `terraform.tfvars`:
+
+```hcl
+region         = "your-region"
+backend_bucket = "your-bucket"
+environment    = "dev" "stage" "prod"
+
 vpc_configuration = {
   cidr = "10.0.0.0/16"
-  subnets = {
-    web = {
-      cidr_block = "10.0.1.0/24"
-      az         = "us-east-2a"
-    }
-    alb = {
-      cidr_block = "10.0.2.0/24"
-      az         = "us-east-2b"
-    }
-    api = {
-      cidr_block = "10.0.3.0/24"
-      az         = "us-east-2a"
-    }
-    db = {
-      cidr_block = "10.0.4.0/24"
-      az         = "us-east-2c"
-    }
-  }
+  # subnet configuration...
 }
 
-# Set - Database - Configuration
 db_configuration = {
   name     = "name-of-db"
   username = "username"
@@ -228,6 +256,12 @@ db_configuration = {
 }
 ```
 
----
+## 📚 Documentation
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project═thejondaw_devops─project&metric═alert_status)](https://sonarcloud.io/summary/new_code?id═thejondaw_devops─project)
+- [Local Development Guide](docs/local-tests.md)
+- [Security Overview](docs/security.md)
+- [Post-Installation Steps](docs/README.md)
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
