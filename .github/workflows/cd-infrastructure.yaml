@@ -104,10 +104,16 @@ jobs:
 
       - name: Run tfsec
         run: |
-          tfsec terraform/modules/* \
-            --format text \
-            --minimum-severity HIGH \
-            --no-color
+          for module in terraform/modules/*; do
+            if [ -d "$module" ]; then
+              echo "Running tfsec on module: $module"
+              tfsec "$module" \
+                --format text \
+                --minimum-severity HIGH \
+                --no-color
+            fi
+          done
+
 
           - name: Install & Run checkov
             run: |
