@@ -11,7 +11,7 @@ Production-ready implementation of a three-tier architecture leveraging modern D
 
 The project implements a classic three-tier architecture with modern cloud-native enhancements:
 
-```mermaid
+```
 ┌──────────────────────────────────────────────────────────┐
 │                            VPC                           │
 │ ┌──────────────────────────────────────────────────────┐ │
