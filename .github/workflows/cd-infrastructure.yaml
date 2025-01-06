@@ -102,16 +102,11 @@ jobs:
           curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
           tfsec --version
 
-      - name: Run tfsec
+      - name: Run tfsec on all modules
         run: |
           for module in terraform/modules/*; do
-            if [ -d "$module" ]; then
-              echo "Running tfsec on module: $module"
-              tfsec "$module" \
-                --format text \
-                --minimum-severity HIGH \
-                --no-color
-            fi
+            echo "Running tfsec on module: $module"
+            tfsec "$module"
           done
 
 
