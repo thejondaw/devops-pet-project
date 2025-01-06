@@ -97,32 +97,33 @@ jobs:
             fi
           done
 
-      - name: Install tfsec
+      - name: Set up tfsec
         run: |
           curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
+          echo "tfsec version:"
           tfsec --version
 
       - name: Run tfsec on all modules
+        shell: bash
         run: |
           for module in terraform/modules/*; do
             echo "Running tfsec on module: $module"
             tfsec "$module"
           done
 
+      - name: Install & Run checkov
+        run: |
+          pip install checkov
+          checkov -d terraform/ --framework terraform --output cli
 
-          - name: Install & Run checkov
-            run: |
-              pip install checkov
-              checkov -d terraform/ --framework terraform --output cli
-
-          - name: Analysis Summary
-            if: always()
-            run: |
-              echo "### Infrastructure Analysis Results" >> $GITHUB_STEP_SUMMARY
-              echo "* Terraform Format: $([ "${{ steps.fmt.outputs.formatted }}" == "true" ] && echo "Fixed" || echo "OK")" >> $GITHUB_STEP_SUMMARY
-              echo "* TFLint: Completed" >> $GITHUB_STEP_SUMMARY
-              echo "* Tfsec: Completed" >> $GITHUB_STEP_SUMMARY
-              echo "* Checkov: Completed" >> $GITHUB_STEP_SUMMARY
+      - name: Analysis Summary
+        if: always()
+        run: |
+          echo "### Infrastructure Analysis Results" >> $GITHUB_STEP_SUMMARY
+          echo "* Terraform Format: $([ "${{ steps.fmt.outputs.formatted }}" == "true" ] && echo "Fixed" || echo "OK")" >> $GITHUB_STEP_SUMMARY
+          echo "* TFLint: Completed" >> $GITHUB_STEP_SUMMARY
+          echo "* Tfsec: Completed" >> $GITHUB_STEP_SUMMARY
+          echo "* Checkov: Completed" >> $GITHUB_STEP_SUMMARY
 
   prepare:
     needs: lint
