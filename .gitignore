@@ -4,3 +4,4 @@ dist/
 .npm
 .env
 *.test.js
+.vscode/
