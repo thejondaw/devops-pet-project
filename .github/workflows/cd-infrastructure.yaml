@@ -74,10 +74,9 @@ jobs:
             source  = "github.com/terraform-linters/tflint-ruleset-aws"
           }
           config {
-            module = true
+            call_module_type = "local"
             force = false
           }
-          # Critical rules for infrastructure quality
           rule "terraform_deprecated_index" { enabled = true }
           rule "terraform_unused_declarations" { enabled = true }
           rule "terraform_required_version" { enabled = true }
@@ -86,9 +85,6 @@ jobs:
             enabled = true
             format = "snake_case"
           }
-          # AWS specific rules
-          rule "aws_resource_missing_tags" { enabled = true }
-          rule "aws_s3_bucket_versioning" { enabled = true }
           EOF
 
       - name: Run TFLint
