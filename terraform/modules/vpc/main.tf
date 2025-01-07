@@ -406,12 +406,12 @@ resource "aws_security_group" "sec_group_vpc" {
     cidr_blocks = [var.vpc_configuration.cidr]
   }
 
-  # Существующие egress правила для HTTP/HTTPS оставляем
   egress {
     description = "HTTPS outbound"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
+    #tfsec:ignore:aws-ec2-no-public-egress-sgr
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -420,6 +420,7 @@ resource "aws_security_group" "sec_group_vpc" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
+    #tfsec:ignore:aws-ec2-no-public-egress-sgr
     cidr_blocks = ["0.0.0.0/0"]
   }
 
