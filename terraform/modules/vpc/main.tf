@@ -111,7 +111,25 @@ resource "aws_network_acl" "alb" {
   vpc_id     = aws_vpc.main.id
   subnet_ids = [aws_subnet.subnet_alb.id]
 
-  # Allow HTTP
+  # Deny dangerous ports first
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 90
+    action     = "deny"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 3389  # RDP
+    to_port    = 3389
+  }
+
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 91
+    action     = "deny"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 22    # SSH
+    to_port    = 22
+  }
+
   ingress {
     protocol   = "tcp"
     rule_no    = 100
@@ -121,7 +139,6 @@ resource "aws_network_acl" "alb" {
     to_port    = 80
   }
 
-  # Allow HTTPS
   ingress {
     protocol   = "tcp"
     rule_no    = 110
@@ -131,7 +148,6 @@ resource "aws_network_acl" "alb" {
     to_port    = 443
   }
 
-  # Allow health check responses
   ingress {
     protocol   = "tcp"
     rule_no    = 120
@@ -141,7 +157,6 @@ resource "aws_network_acl" "alb" {
     to_port    = 65535
   }
 
-  # Allow all outbound traffic
   egress {
     protocol   = -1
     rule_no    = 100
