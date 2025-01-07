@@ -1,4 +1,3 @@
-# ================== MONITORING ================== #
 # Enhanced monitoring IAM role
 resource "aws_iam_role" "rds_enhanced_monitoring" {
   name = "${var.environment}-rds-monitoring-role"
@@ -16,12 +15,16 @@ resource "aws_iam_role" "rds_enhanced_monitoring" {
     ]
   })
 
-  managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"]
-
   tags = merge(local.common_tags, {
     Name = "${var.environment}-rds-monitoring-role"
     Type = "database-monitoring"
   })
+}
+
+# Attach managed policy for RDS monitoring
+resource "aws_iam_role_policy_attachment" "rds_enhanced_monitoring" {
+  role       = aws_iam_role.rds_enhanced_monitoring.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
 }
 
 # CloudWatch alarms for database monitoring

@@ -5,30 +5,6 @@ resource "random_password" "aurora_password" {
   override_special = "!#$%^&*()-_=+[]{}<>:?"
 }
 
-# Store credentials in Secrets Manager
-resource "aws_secretsmanager_secret" "aurora_secret" {
-  name        = "${var.environment}/aurora/credentials"
-  description = "Aurora PostgreSQL credentials"
-  kms_key_id  = aws_kms_key.rds.arn
-
-  tags = merge(local.common_tags, {
-    Name = "${var.environment}-aurora-secret"
-    Type = "database-secret"
-  })
-}
-
-resource "aws_secretsmanager_secret_version" "aurora_secret_version" {
-  secret_id = aws_secretsmanager_secret.aurora_secret.id
-  secret_string = jsonencode({
-    username = var.db_configuration.username
-    password = random_password.aurora_password.result
-    engine   = "aurora-postgresql"
-    port     = var.db_configuration.port
-    dbname   = var.db_configuration.name
-    host     = aws_rds_cluster.aurora_postgresql.endpoint
-  })
-}
-
 # RDS parameter group for PostgreSQL optimization
 resource "aws_rds_cluster_parameter_group" "aurora_postgresql" {
   family = "aurora-postgresql15"
@@ -99,30 +75,5 @@ resource "aws_rds_cluster_instance" "rds_instance" {
   tags = merge(local.common_tags, {
     Name = "${var.environment}-aurora-instance"
     Type = "database-instance"
-  })
-}
-
-# Enhanced monitoring IAM role
-resource "aws_iam_role" "rds_enhanced_monitoring" {
-  name = "${var.environment}-rds-monitoring-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "monitoring.rds.amazonaws.com"
-        }
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
-
-  managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"]
-
-  tags = merge(local.common_tags, {
-    Name = "${var.environment}-rds-monitoring-role"
-    Type = "database-monitoring"
   })
 }
