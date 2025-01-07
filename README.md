@@ -162,14 +162,45 @@ graph TD
    - Zero-touch deployment
    - Automated rollbacks
 
+<div align="center">
+  <img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png">
+</div>
 
-## Known Security Trade-offs
+## 🛡️ Known Security Trade-offs
 
-Default **VPC Security Group** is not fully restricted *(CKV2_AWS_12)*
-   - Current setup keeps default **SG** settings for development simplicity
-   - For production environments, consider implementing strict default **SG** *policies*
-   - Reference: [AWS Networking Policies](https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-4)
+The following security checks are intentionally skipped for development purposes:
 
+### 🌍 Network & Access
+- **Public EKS Access** *(CKV_AWS_38, CKV_AWS_39)*
+ - EKS endpoint is publicly accessible for development convenience
+ - Production should restrict access to specific IP ranges
+
+- **Auto-assign Public IPs** *(CKV_AWS_130)*
+ - Subnets auto-assign public IPs for EKS worker nodes access
+ - Production should use NAT Gateway + private subnets
+
+### 💾 Database & Backups
+- **RDS Security Settings** *(CKV_AWS_162, CKV_AWS_313, CKV_AWS_139)*
+ - IAM authentication disabled
+ - Deletion protection disabled
+ - Using default backup strategy (14 days retention)
+
+### 📝 Logging & State
+- **Short Log Retention** *(CKV_AWS_338)*
+ - CloudWatch logs kept for 7-30 days instead of 1 year
+ - Reduced costs for non-production environments
+
+- **State File Locking** *(CKV_TF_3)*
+ - Terraform state locks disabled
+ - Single developer environment doesn't require state locking
+
+### Reference
+- [PrismaCloud Security Policies](https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/)
+- [AWS Security Best Practices](https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/welcome.html)
+
+<div align="center">
+  <img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png">
+</div>
 
 ## 📋 Implementation Progress
 
@@ -274,3 +305,7 @@ db_configuration = {
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+<div align="center">
+  <img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png">
+</div>
