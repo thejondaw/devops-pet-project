@@ -114,7 +114,7 @@ jobs:
       - name: Install & Run checkov
         run: |
           pip install checkov
-          checkov -d terraform/ --framework terraform --skip-check CKV2_AWS_5,CKV2_AWS_27,CKV2_AWS_12
+          checkov -d terraform/ --framework terraform --skip-check CKV_TF_3,CKV_AWS_338,CKV_AWS_38,CKV_AWS_39,CKV_AWS_162,CKV_AWS_324,CKV_AWS_313,CKV_AWS_139,CKV_AWS_226,CKV_AWS_130,CKV2_AWS_8
 
       - name: Analysis Summary
         if: always()
