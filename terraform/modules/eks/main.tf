@@ -1,5 +1,4 @@
 data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
 
 # Timestamp - Unique Naming
 resource "time_static" "cluster_timestamp" {}
