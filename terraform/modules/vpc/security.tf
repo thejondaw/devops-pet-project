@@ -1,3 +1,6 @@
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
 # Flow Logs for VPC
 resource "aws_flow_log" "vpc_flow_logs" {
   # Log ALL traffic - accepted and rejected
@@ -20,11 +23,51 @@ resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
   kms_key_id        = aws_kms_key.flow_logs.arn # Encryption
 }
 
-# KMS Key for encryption Loggs
+# VPC Flow Logs KMS Key
 resource "aws_kms_key" "flow_logs" {
   description             = "${var.environment} VPC Flow Logs Encryption Key"
   deletion_window_in_days = 7
   enable_key_rotation     = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM Root User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow VPC Flow Logs to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "logs.${data.aws_region.current.name}.amazonaws.com"
+        }
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:DescribeKey"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+
+  tags = {
+    Name        = "${var.environment}-flow-logs-encryption"
+    Environment = var.environment
+  }
+}
+
+resource "aws_kms_alias" "flow_logs" {
+  name          = "alias/${var.environment}-flow-logs"
+  target_key_id = aws_kms_key.flow_logs.key_id
 }
 
 # IAM Role for Flow Logs

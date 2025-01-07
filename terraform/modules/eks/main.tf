@@ -1,3 +1,6 @@
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
 # Timestamp - Unique Naming
 resource "time_static" "cluster_timestamp" {}
 
@@ -207,11 +210,51 @@ resource "aws_cloudwatch_log_group" "eks" {
   })
 }
 
-# KMS Key for Cloudwatch Log Encryption
+# CloudWatch KMS Key
 resource "aws_kms_key" "cloudwatch" {
   description             = "CloudWatch Log Encryption"
   deletion_window_in_days = 7
   enable_key_rotation     = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM Root User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow CloudWatch to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "logs.${data.aws_region.current.name}.amazonaws.com"
+        }
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:DescribeKey"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+
+  tags = {
+    Name        = "${var.environment}-cloudwatch-encryption"
+    Environment = var.environment
+  }
+}
+
+resource "aws_kms_alias" "cloudwatch" {
+  name          = "alias/${var.environment}-cloudwatch"
+  target_key_id = aws_kms_key.cloudwatch.key_id
 }
 
 # ================== EKS CLUSTER =================== #
@@ -263,11 +306,51 @@ resource "aws_eks_cluster" "study" {
   })
 }
 
-# KMS Key for encryption
+# EKS KMS Key
 resource "aws_kms_key" "eks" {
   description             = "EKS Secret Encryption Key"
   deletion_window_in_days = 7
   enable_key_rotation     = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM Root User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow EKS to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "eks.amazonaws.com"
+        }
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:CreateGrant",
+          "kms:GenerateDataKey*",
+          "kms:DescribeKey"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+
+  tags = {
+    Name        = "${var.environment}-eks-encryption"
+    Environment = var.environment
+  }
+}
+
+resource "aws_kms_alias" "eks" {
+  name          = "alias/${var.environment}-eks"
+  target_key_id = aws_kms_key.eks.key_id
 }
 
 # =================== NODE GROUP =================== #
