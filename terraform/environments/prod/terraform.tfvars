@@ -1,13 +1,22 @@
-# Set - AWS Region
+# AWS deployment region
 region = "us-east-2"
 
-# Set - S3 Bucket - Name
+# Backend state bucket
 backend_bucket = "alexsuff"
 
-# Set - Environment - Name
+# Environment name
 environment = "prod"
 
-# Set - VPC & Subnets - Configuration
+# Cost tracking
+cost_center = "devops-infrastructure"
+
+# Access control
+allowed_ips = [
+  "10.0.0.0/8", # Internal network
+  "YOUR.IP/32"  # Your specific IP
+]
+
+# Network configuration
 vpc_configuration = {
   cidr = "10.0.0.0/16"
   subnets = {
@@ -30,14 +39,14 @@ vpc_configuration = {
   }
 }
 
-# Set - Database - Configuration
+# Database settings
 db_configuration = {
   name     = "devopsdb"
   username = "jondaw"
   port     = 5432
 }
 
-# Set - EKS Cluster - Condfiguration
+# Kubernetes configuration
 eks_configuration = {
   version        = "1.28"
   min_size       = 3

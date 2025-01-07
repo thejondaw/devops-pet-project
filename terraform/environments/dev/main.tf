@@ -1,20 +1,4 @@
-# Set required Terraform version and providers
-terraform {
-  required_version = ">= 1.0.0, < 2.0.0"
-
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-}
-
-provider "aws" {
-  region = var.region
-}
-
-# BACKEND Module
+# Backend setup (must be deployed first)
 module "backend" {
   source  = "../../modules/backend/"
   version = "1.0.0"
@@ -23,18 +7,20 @@ module "backend" {
   backend_bucket = var.backend_bucket
 }
 
-# VPC Module
+# Network layer
 module "vpc" {
   source = "../../modules/vpc"
 
   environment       = var.environment
   region            = var.region
   vpc_configuration = var.vpc_configuration
+  cost_center       = var.cost_center
+  allowed_ips       = var.allowed_ips
 
   depends_on = [module.backend]
 }
 
-# RDS Module
+# Database layer
 module "rds" {
   source = "../../modules/rds"
 
@@ -45,18 +31,19 @@ module "rds" {
   depends_on = [module.vpc]
 }
 
-# EKS Module
+# Container orchestration layer
 module "eks" {
   source = "../../modules/eks"
 
   region            = var.region
   environment       = var.environment
   eks_configuration = var.eks_configuration
+  allowed_ips       = var.allowed_ips
 
   depends_on = [module.vpc]
 }
 
-# TOOLS Module
+# Platform tools layer
 module "tools" {
   source = "../../modules/tools"
 

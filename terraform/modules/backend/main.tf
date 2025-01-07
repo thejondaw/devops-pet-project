@@ -1,16 +1,14 @@
-# Enable - Versioning for State Files
+# Enable versioning for state files to track changes
 resource "aws_s3_bucket_versioning" "terraform_state" {
   bucket = data.aws_s3_bucket.terraform_state.id
-
   versioning_configuration {
     status = "Enabled"
   }
 }
 
-# Enable - Server-Side Encryption
+# Configure server-side encryption for state files
 resource "aws_s3_bucket_server_side_encryption_configuration" "terraform_state" {
   bucket = data.aws_s3_bucket.terraform_state.id
-
   rule {
     apply_server_side_encryption_by_default {
       sse_algorithm = "AES256"
@@ -18,7 +16,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "terraform_state" 
   }
 }
 
-# Block - Public Access
+# Block all public access for security
 resource "aws_s3_bucket_public_access_block" "terraform_state" {
   bucket = data.aws_s3_bucket.terraform_state.id
 

@@ -1,4 +1,4 @@
-# ArgoCD - Helm
+# ArgoCD Helm release
 resource "helm_release" "argocd" {
   name             = "argocd"
   repository       = "https://argoproj.github.io/argo-helm"
@@ -8,6 +8,7 @@ resource "helm_release" "argocd" {
   create_namespace = true
 
   values = [<<-EOF
+    # Server configuration
     server:
       extraArgs:
         - --insecure
@@ -26,6 +27,7 @@ resource "helm_release" "argocd" {
           environment: ${var.environment}
         loadBalancerSourceRanges: ${jsonencode(var.argocd_server_service.source_ranges)}
 
+      # RBAC configuration
       rbac:
         config:
           policy.csv: |
@@ -33,12 +35,14 @@ resource "helm_release" "argocd" {
             p, role:org-admin, clusters, get, *, allow
             p, role:org-admin, projects, get, *, allow
 
+      # Git repositories configuration
       config:
         repositories: |
           - type: git
             url: https://github.com/thejondaw/devops-project.git
             name: infrastructure
 
+    # Controller settings
     controller:
       replicas: 1
       resources:
@@ -49,6 +53,7 @@ resource "helm_release" "argocd" {
           cpu: 100m
           memory: 128Mi
 
+    # Redis settings
     redis:
       resources:
         limits:

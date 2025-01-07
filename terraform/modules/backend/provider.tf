@@ -1,4 +1,4 @@
-# Provider - Terraform
+# Configure Terraform and providers
 terraform {
   required_version = ">= 1.0.0"
   required_providers {
@@ -7,6 +7,7 @@ terraform {
       version = "~> 5.0"
     }
   }
+  # S3 backend configuration
   backend "s3" {
     bucket  = "alexsuff"
     key     = "project/backend.tfstate"
@@ -15,17 +16,17 @@ terraform {
   }
 }
 
-# Provider configuration using variables
+# AWS Provider configuration
 provider "aws" {
   region = var.region
 }
 
-# S3 Bucket - Terraform State
+# Use existing S3 bucket for state storage
 data "aws_s3_bucket" "terraform_state" {
   bucket = var.backend_bucket
 }
 
-# DynamoDB Table - State Locking
+# Use existing DynamoDB table for state locking
 data "aws_dynamodb_table" "terraform_locks" {
   name = "${var.backend_bucket}-locks"
 }

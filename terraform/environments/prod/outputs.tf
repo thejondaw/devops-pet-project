@@ -1,35 +1,34 @@
-# Output - VPC - ID
+# Network outputs
 output "vpc_id" {
-  description = "VPC ID"
+  description = "ID of the created VPC"
   value       = module.vpc.vpc_id
 }
 
-# Output - DB - Endpoint
+# Database outputs
 output "db_endpoint" {
-  description = "Database endpoint"
+  description = "Aurora cluster endpoint"
   value       = module.rds.db_endpoint
+  sensitive   = true
 }
 
-# Output - EKS - Endpoint
+# Kubernetes outputs
 output "eks_endpoint" {
-  description = "Kubernetes API endpoint"
+  description = "Kubernetes API server endpoint"
   value       = module.eks.cluster_endpoint
 }
 
-# Output - kubectl - Config
 output "configure_kubectl" {
   description = "Command to configure kubectl"
   value       = module.eks.configure_kubectl
 }
 
-# Output - ArgoCD - Host
+# Platform tools outputs
 output "argocd_host" {
   description = "ArgoCD server hostname"
   value       = module.tools.argocd_host
 }
 
-# Output - Namespaces
 output "namespaces" {
-  description = "Created namespaces"
+  description = "List of created Kubernetes namespaces"
   value       = module.tools.namespaces
 }

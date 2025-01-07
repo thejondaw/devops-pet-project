@@ -1,10 +1,8 @@
-# Fetch Account ID
-data "aws_caller_identity" "current" {}
-
-# IAM Role - Vault
+# IAM role for Vault with OIDC authentication
 resource "aws_iam_role" "vault" {
   name = "${var.environment}-vault-role"
 
+  # Trust policy for EKS OIDC provider
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -25,12 +23,14 @@ resource "aws_iam_role" "vault" {
       }
     ]
   })
+
+  tags = merge(local.common_tags, {
+    Name = "${var.environment}-vault-role"
+    Type = "vault-iam"
+  })
 }
 
-# Get current AWS account
-data "aws_caller_identity" "current" {}
-
-# IAM Policy for Vault secrets and EBS operations
+# IAM policy for Vault operations
 resource "aws_iam_role_policy" "vault_secrets" {
   name = "${var.environment}-vault-secrets-policy"
   role = aws_iam_role.vault.id
@@ -39,7 +39,7 @@ resource "aws_iam_role_policy" "vault_secrets" {
     Version = "2012-10-17"
     Statement = [
       {
-        # Restrict Secrets Manager access to specific environment paths
+        # Secrets Manager access limited to environment namespace
         Effect = "Allow"
         Action = [
           "secretsmanager:GetSecretValue",
@@ -51,7 +51,7 @@ resource "aws_iam_role_policy" "vault_secrets" {
         ]
       },
       {
-        # EBS operations limited by environment tag
+        # EBS volume operations with environment tag restriction
         Effect = "Allow"
         Action = [
           "ec2:CreateSnapshot",
@@ -70,7 +70,7 @@ resource "aws_iam_role_policy" "vault_secrets" {
         }
       },
       {
-        # Read-only EC2 operations - safe to allow on all resources
+        # Read-only EC2 operations
         Effect = "Allow"
         Action = [
           "ec2:DescribeAvailabilityZones",
