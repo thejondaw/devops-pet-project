@@ -5,7 +5,7 @@ region = "us-east-2"
 backend_bucket = "alexsuff"
 
 # Set - Environment - Name
-environment = "prod"
+environment = "master"
 
 # Set - VPC & Subnets - Configuration
 vpc_configuration = {

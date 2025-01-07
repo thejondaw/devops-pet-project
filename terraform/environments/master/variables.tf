@@ -6,7 +6,7 @@ variable "region" {
 
 # Variable - Environment
 variable "environment" {
-  description = "Environment name (dev, stage, prod)"
+  description = "Environment name (develop, stage, master)"
   type        = string
 }
 

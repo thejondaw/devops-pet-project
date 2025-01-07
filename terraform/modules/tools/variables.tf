@@ -6,11 +6,11 @@ variable "region" {
 
 # Variable - Environment
 variable "environment" {
-  description = "Environment name (develop, stage, prod)"
+  description = "Environment name (develop, stage, master)"
   type        = string
   validation {
     condition     = contains(["app"], var.environment)
-    error_message = "Environment must be develop, stage, or prod."
+    error_message = "Environment must be develop, stage, or master."
   }
 }
 
