@@ -1,10 +1,10 @@
-# AWS Region for resource deployment
+# Variable - AWS Region
 variable "region" {
   description = "AWS Region for backend resources"
   type        = string
 }
 
-# S3 bucket name for terraform state
+# Variable - S3 Bucket - Name
 variable "backend_bucket" {
   description = "Name of the S3 bucket for terraform state"
   type        = string

@@ -1,10 +1,10 @@
-# AWS Region configuration
+# Variable - AWS Region
 variable "region" {
-  description = "AWS Region for resource deployment"
+  description = "AWS Region"
   type        = string
 }
 
-# Environment name validation
+# Variable - Environment
 variable "environment" {
   description = "Environment name (develop, stage, prod)"
   type        = string
@@ -14,28 +14,30 @@ variable "environment" {
   }
 }
 
-# Network configuration with multi-AZ support
+# ===================== NETWORK ====================== #
+
+# Variable - CIDR Block - Subnets
 variable "vpc_configuration" {
-  description = "VPC network configuration including CIDR and multi-AZ subnets"
+  description = "VPC configuration including CIDR and subnets"
   type = object({
     cidr = string
     subnets = object({
-      web = list(object({
+      web = object({
         cidr_block = string
         az         = string
-      }))
-      alb = list(object({
+      })
+      alb = object({
         cidr_block = string
         az         = string
-      }))
-      api = list(object({
+      })
+      api = object({
         cidr_block = string
         az         = string
-      }))
-      db = list(object({
+      })
+      db = object({
         cidr_block = string
         az         = string
-      }))
+      })
     })
   })
   validation {
@@ -44,15 +46,9 @@ variable "vpc_configuration" {
   }
 }
 
-# Security configuration
+# Variable - Allowed IPs
 variable "allowed_ips" {
   description = "List of allowed IP ranges for web access"
   type        = list(string)
   default     = ["YOUR.OFFICE.IP/32", "YOUR.VPN.IP/32"]
-}
-
-# Cost tracking
-variable "cost_center" {
-  description = "Cost center tag for resource billing"
-  type        = string
 }

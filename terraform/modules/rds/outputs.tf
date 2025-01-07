@@ -1,26 +1,17 @@
-# Database connection details
+# Output - DB - Endpoint
 output "db_endpoint" {
-  description = "RDS cluster endpoint for applications"
+  description = "RDS cluster endpoint"
   value       = aws_rds_cluster.aurora_postgresql.endpoint
 }
 
-output "db_reader_endpoint" {
-  description = "RDS cluster reader endpoint for read-only connections"
-  value       = aws_rds_cluster.aurora_postgresql.reader_endpoint
+# Output - DB - Name
+output "db_name" {
+  description = "Database name"
+  value       = aws_rds_cluster.aurora_postgresql.database_name
 }
 
-output "db_port" {
-  description = "Database port number"
-  value       = aws_rds_cluster.aurora_postgresql.port
-}
-
-# Monitoring configuration
-output "monitoring_interval" {
-  description = "Enhanced Monitoring interval in seconds"
-  value       = aws_rds_cluster_instance.rds_instance.monitoring_interval
-}
-
-output "performance_insights_enabled" {
-  description = "Whether Performance Insights is enabled"
-  value       = aws_rds_cluster_instance.rds_instance.performance_insights_enabled
+# Output - Secret Manager - Secret Name
+output "secret_name" {
+  description = "Name of the secret in AWS Secrets Manager"
+  value       = aws_secretsmanager_secret.aurora_secret.name
 }

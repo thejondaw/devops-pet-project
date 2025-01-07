@@ -1,28 +1,29 @@
-# VPC Flow Logs setup
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
+# Flow Logs for VPC
 resource "aws_flow_log" "vpc_flow_logs" {
-  traffic_type         = "ALL"
+  # Log ALL traffic - accepted and rejected
+  traffic_type = "ALL"
+
+  # Log into CloudWatch
   log_destination_type = "cloud-watch-logs"
   log_destination      = aws_cloudwatch_log_group.vpc_flow_logs.arn
-  vpc_id               = aws_vpc.main.id
-  iam_role_arn         = aws_iam_role.vpc_flow_logs.arn
 
-  tags = merge(local.common_tags, {
-    Name = "vpc-flow-logs"
-  })
+  vpc_id = aws_vpc.main.id
+
+  # IAM Role for Logging
+  iam_role_arn = aws_iam_role.vpc_flow_logs.arn
 }
 
-# CloudWatch Log Group for Flow Logs
+# Log Group in CloudWatch
 resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
   name              = "/aws/vpc/flow-logs/${var.environment}"
-  retention_in_days = 30
-  kms_key_id        = aws_kms_key.flow_logs.arn
-
-  tags = merge(local.common_tags, {
-    Name = "vpc-flow-logs"
-  })
+  retention_in_days = 30                        # Keep 30 Days
+  kms_key_id        = aws_kms_key.flow_logs.arn # Encryption
 }
 
-# KMS key for VPC Flow Logs encryption
+# VPC Flow Logs KMS Key
 resource "aws_kms_key" "flow_logs" {
   description             = "${var.environment} VPC Flow Logs Encryption Key"
   deletion_window_in_days = 7
@@ -41,7 +42,7 @@ resource "aws_kms_key" "flow_logs" {
         Resource = "*"
       },
       {
-        Sid    = "Allow CloudWatch to use the key"
+        Sid    = "Allow VPC Flow Logs to use the key"
         Effect = "Allow"
         Principal = {
           Service = "logs.${data.aws_region.current.name}.amazonaws.com"
@@ -58,9 +59,10 @@ resource "aws_kms_key" "flow_logs" {
     ]
   })
 
-  tags = merge(local.common_tags, {
-    Name = "${var.environment}-flow-logs-encryption"
-  })
+  tags = {
+    Name        = "${var.environment}-flow-logs-encryption"
+    Environment = var.environment
+  }
 }
 
 resource "aws_kms_alias" "flow_logs" {
@@ -68,69 +70,54 @@ resource "aws_kms_alias" "flow_logs" {
   target_key_id = aws_kms_key.flow_logs.key_id
 }
 
-# Main VPC Security Group
-resource "aws_security_group" "main_vpc_sg" {
-  name        = "main-vpc-sg"
-  description = "Main security group for VPC traffic"
-  vpc_id      = aws_vpc.main.id
+# IAM Role for Flow Logs
+resource "aws_iam_role" "vpc_flow_logs" {
+  name = "${var.environment}-vpc-flow-logs-role"
 
-  # HTTP from allowed IPs
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = var.allowed_ips
-    description = "HTTP from allowed IPs"
-  }
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "vpc-flow-logs.amazonaws.com"
+      }
+    }]
+  })
+}
 
-  # HTTPS from allowed IPs
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = var.allowed_ips
-    description = "HTTPS from allowed IPs"
-  }
+# Allow writing logs to CloudWatch
+resource "aws_iam_role_policy" "vpc_flow_logs" {
+  name = "${var.environment}-vpc-flow-logs-policy"
+  role = aws_iam_role.vpc_flow_logs.id
 
-  # SSH from VPC only
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [var.vpc_configuration.cidr]
-    description = "SSH from VPC only"
-  }
-
-  # Required outbound rules
-  egress {
-    from_port = 443
-    to_port   = 443
-    protocol  = "tcp"
-    #tfsec:ignore:aws-ec2-no-public-egress-sgr
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTPS outbound"
-  }
-
-  egress {
-    from_port = 80
-    to_port   = 80
-    protocol  = "tcp"
-    #tfsec:ignore:aws-ec2-no-public-egress-sgr
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTP outbound"
-  }
-
-  egress {
-    from_port = 53
-    to_port   = 53
-    protocol  = "udp"
-    #tfsec:ignore:aws-ec2-no-public-egress-sgr
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "DNS queries"
-  }
-
-  tags = merge(local.common_tags, {
-    Name = "main-vpc-sg"
-    Type = "vpc-security"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
+        ]
+        Resource = "${aws_cloudwatch_log_group.vpc_flow_logs.arn}:*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:DescribeLogGroups"
+        ]
+        Resource = "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/vpc/flow-logs/*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt",
+          "kms:GenerateDataKey"
+        ]
+        Resource = aws_kms_key.flow_logs.arn
+      }
+    ]
   })
 }

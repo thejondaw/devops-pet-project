@@ -1,10 +1,10 @@
-# AWS deployment region
+# Variable - AWS Region
 variable "region" {
   description = "AWS Region"
   type        = string
 }
 
-# Environment tag
+# Variable - Environment
 variable "environment" {
   description = "Environment name (develop, stage, prod)"
   type        = string
@@ -14,27 +14,18 @@ variable "environment" {
   }
 }
 
-# Database configuration settings
+# ============== DATABASE CONFIGURATION ============== #
+
+# Database Credentials
 variable "db_configuration" {
-  description = "Aurora PostgreSQL configuration"
+  description = "Database configuration settings"
   type = object({
-    name     = string # Database name
-    username = string # Master username
-    port     = number # Database port
+    name     = string
+    username = string
+    port     = number
   })
   validation {
     condition     = var.db_configuration.port >= 1024 && var.db_configuration.port <= 65535
     error_message = "Database port must be between 1024 and 65535."
-  }
-}
-
-# Common tags for all resources
-locals {
-  common_tags = {
-    Environment = var.environment
-    Project     = "devops-project"
-    ManagedBy   = "terraform"
-    Service     = "aurora-postgresql"
-    Owner       = "DevOps"
   }
 }

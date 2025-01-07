@@ -1,15 +1,16 @@
-# Configure Terraform and providers
+# S3 Bucket - Backend
 terraform {
-  required_version = ">= 1.0.0"
-
-  # S3 backend for state management
   backend "s3" {
     bucket  = "alexsuff"
     key     = "project/develop/vpc.tfstate"
     region  = "us-east-2"
     encrypt = true
   }
+}
 
+# Provider - Terraform
+terraform {
+  required_version = ">= 1.0.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"

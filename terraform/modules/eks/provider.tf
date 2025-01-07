@@ -1,3 +1,14 @@
+# S3 Bucket - Backend
+terraform {
+  backend "s3" {
+    bucket  = "alexsuff"
+    key     = "project/develop/eks.tfstate"
+    region  = "us-east-2"
+    encrypt = true
+  }
+}
+
+# Provider - Terraform
 terraform {
   required_version = ">= 1.0.0"
   required_providers {
@@ -9,14 +20,6 @@ terraform {
       source  = "hashicorp/time"
       version = "~> 0.9.0"
     }
-  }
-
-  # State backend configuration
-  backend "s3" {
-    bucket  = "alexsuff"
-    key     = "project/develop/eks.tfstate"
-    region  = "us-east-2"
-    encrypt = true
   }
 }
 

@@ -1,4 +1,4 @@
-# Configure required providers
+# Provider - Terraform
 terraform {
   required_version = ">= 1.0.0"
   required_providers {
@@ -21,7 +21,7 @@ terraform {
   }
 }
 
-# Configure Kubernetes provider with EKS authentication
+# Provider - Kubernetes
 provider "kubernetes" {
   host                   = data.aws_eks_cluster.cluster.endpoint
   cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
@@ -33,7 +33,7 @@ provider "kubernetes" {
   }
 }
 
-# Configure kubectl provider with EKS authentication
+# Prodiver - kubectl
 provider "kubectl" {
   host                   = data.aws_eks_cluster.cluster.endpoint
   cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
@@ -44,7 +44,7 @@ provider "kubectl" {
   }
 }
 
-# Configure Helm provider with EKS authentication
+# Provider - Helm
 provider "helm" {
   kubernetes {
     host                   = data.aws_eks_cluster.cluster.endpoint
@@ -58,13 +58,12 @@ provider "helm" {
   }
 }
 
-# Fetch AWS account info
-data "aws_caller_identity" "current" {}
+# =================== DATA SOURCES =================== #
 
-# Fetch available EKS clusters
-data "aws_eks_clusters" "available" {}
+# Fetch - EKS Cluster
+data "aws_eks_clusters" "available" {
+}
 
-# Get cluster by environment name pattern
 data "aws_eks_cluster" "cluster" {
   name = [
     for cluster_name in data.aws_eks_clusters.available.names :
