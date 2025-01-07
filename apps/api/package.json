@@ -11,9 +11,9 @@
     "test": "jest"
   },
   "dependencies": {
-    "express": "~4.13.1",
+    "express": "~4.20.0",
     "node-uuid": "1.4.7",
-    "pg": "8.2.1"
+    "pg": "8.13.1"
   },
   "devDependencies": {
     "jest": "^29.7.0",
