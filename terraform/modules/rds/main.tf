@@ -34,19 +34,35 @@ data "aws_subnet" "db" {
 
 # ===================== DATABASE ===================== #
 
+resource "aws_rds_cluster_parameter_group" "aurora_postgresql" {
+  family = "aurora-postgresql15"
+  name   = "${var.environment}-aurora-params"
+
+  parameter {
+    name  = "log_statement"
+    value = "all" # Логируем все SQL запросы
+  }
+
+  parameter {
+    name  = "log_min_duration_statement"
+    value = "1000" # Логируем запросы дольше 1 секунды
+  }
+}
+
 # Serverless v2 RDS cluster - Aurora PostgreSQL
 resource "aws_rds_cluster" "aurora_postgresql" {
-  cluster_identifier     = "${var.environment}-aurora-cluster"
-  engine                 = "aurora-postgresql"
-  engine_mode            = "provisioned"
-  engine_version         = "15.3"
-  database_name          = var.db_configuration.name
-  master_username        = var.db_configuration.username
-  master_password        = random_password.aurora_password.result
-  port                   = var.db_configuration.port
-  db_subnet_group_name   = aws_db_subnet_group.aurora_subnet_group.name
-  vpc_security_group_ids = [aws_security_group.sg_aurora.id]
-  skip_final_snapshot    = true
+  cluster_identifier              = "${var.environment}-aurora-cluster"
+  engine                          = "aurora-postgresql"
+  engine_mode                     = "provisioned"
+  engine_version                  = "15.3"
+  database_name                   = var.db_configuration.name
+  master_username                 = var.db_configuration.username
+  master_password                 = random_password.aurora_password.result
+  port                            = var.db_configuration.port
+  db_subnet_group_name            = aws_db_subnet_group.aurora_subnet_group.name
+  vpc_security_group_ids          = [aws_security_group.sg_aurora.id]
+  skip_final_snapshot             = true
+  db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.aurora_postgresql.name
 
   # Encryption settings
   storage_encrypted = true
