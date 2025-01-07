@@ -108,7 +108,7 @@ jobs:
         run: |
           for module in terraform/modules/*; do
             echo "Running tfsec on module: $module"
-            tfsec "$module" --exclude-checks aws-vpc-no-default-vpc
+            tfsec "$module" -e aws-vpc-no-default-vpc
           done
 
       - name: Install & Run checkov
