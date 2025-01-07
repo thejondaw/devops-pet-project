@@ -12,9 +12,9 @@ resource "aws_vpc" "main" {
 resource "aws_subnet" "subnet_web" {
   count = length(var.vpc_configuration.subnets.web)
 
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = var.vpc_configuration.subnets.web[count.index].cidr_block
-  availability_zone       = var.vpc_configuration.subnets.web[count.index].az
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = var.vpc_configuration.subnets.web[count.index].cidr_block
+  availability_zone = var.vpc_configuration.subnets.web[count.index].az
   #tfsec:ignore:aws-ec2-no-public-ip-subnet
   map_public_ip_on_launch = true
 
@@ -30,9 +30,9 @@ resource "aws_subnet" "subnet_web" {
 resource "aws_subnet" "subnet_alb" {
   count = length(var.vpc_configuration.subnets.alb)
 
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = var.vpc_configuration.subnets.alb[count.index].cidr_block
-  availability_zone       = var.vpc_configuration.subnets.alb[count.index].az
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = var.vpc_configuration.subnets.alb[count.index].cidr_block
+  availability_zone = var.vpc_configuration.subnets.alb[count.index].az
   #tfsec:ignore:aws-ec2-no-public-ip-subnet
   map_public_ip_on_launch = true
 
