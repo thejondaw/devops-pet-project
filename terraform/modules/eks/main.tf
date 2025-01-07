@@ -15,7 +15,7 @@ resource "aws_eks_cluster" "study" {
     #tfsec:ignore:aws-eks-no-public-cluster-access
     endpoint_public_access = true
     # public_access_cidrs  = ["YOUR.OFFICE.IP/32"]
-    public_access_cidrs    = var.allowed_ips
+    public_access_cidrs = var.allowed_ips
     # Restrict EKS API access to specified IPs (e.g. VPN, office, CI/CD runners)
   }
 
