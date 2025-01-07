@@ -162,6 +162,15 @@ graph TD
    - Zero-touch deployment
    - Automated rollbacks
 
+
+## Known Security Trade-offs
+
+Default **VPC Security Group** is not fully restricted *(CKV2_AWS_12)*
+   - Current setup keeps default **SG** settings for development simplicity
+   - For production environments, consider implementing strict default **SG** *policies*
+   - Reference: [AWS Networking Policies](https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-4)
+
+
 ## 📋 Implementation Progress
 
 ### ⚙️ Local Development
