@@ -15,12 +15,6 @@ on:
         type: choice
         options: [apply, destroy]
         default: "apply"
-  # push:
-  #   branches: ["master", "stage", "develop"]
-  #   paths:
-  #     - "terraform/**"
-  #     - ".github/workflows/cd-infrastructure.yaml"
-  #     - "Makefile"
 
 env:
   AWS_REGION: us-east-2
@@ -28,11 +22,10 @@ env:
   TARGET_ENV: ${{ github.event.inputs.environment || github.ref_name }}
 
 jobs:
-  lint:
+  tf-format:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v3
         with:
@@ -59,6 +52,12 @@ jobs:
           git add terraform/
           git commit -m "chore: auto-format terraform files"
           git push
+
+  tf-lint:
+    needs: tf-format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
 
       - name: Install TFLint
         run: |
@@ -97,14 +96,19 @@ jobs:
             fi
           done
 
+  security-check:
+    needs: tf-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
       - name: Set up tfsec
         run: |
           curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
           echo "tfsec version:"
           tfsec --version
 
-      - name: Run tfsec on all modules
-        shell: bash
+      - name: Run tfsec
         run: |
           for module in terraform/modules/*; do
             echo "Running tfsec on module: $module"
@@ -120,32 +124,17 @@ jobs:
         if: always()
         run: |
           echo "### Infrastructure Analysis Results" >> $GITHUB_STEP_SUMMARY
-          echo "* Terraform Format: $([ "${{ steps.fmt.outputs.formatted }}" == "true" ] && echo "Fixed" || echo "OK")" >> $GITHUB_STEP_SUMMARY
           echo "* TFLint: Completed" >> $GITHUB_STEP_SUMMARY
           echo "* Tfsec: Completed" >> $GITHUB_STEP_SUMMARY
           echo "* Checkov: Completed" >> $GITHUB_STEP_SUMMARY
 
-  prepare:
-    needs: lint
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - name: Set deployment matrix
-        id: set-matrix
-        run: |
-          if [[ "${{ github.event.inputs.action }}" == "destroy" ]]; then
-            echo "matrix={\"module\":[\"tools\",\"rds\",\"eks\",\"vpc\",\"backend\"]}" >> $GITHUB_OUTPUT
-          else
-            echo "matrix={\"module\":[\"backend\",\"vpc\",\"eks\",\"rds\",\"tools\"]}" >> $GITHUB_OUTPUT
-          fi
-
   deploy:
-    needs: prepare
+    needs: security-check
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || github.ref_name }}
     strategy:
-      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+      matrix:
+        module: ${{ github.event.inputs.action == 'destroy' && fromJSON('["tools","rds","eks","vpc","backend"]') || fromJSON('["backend","vpc","eks","rds","tools"]') }}
       fail-fast: true
       max-parallel: 1
     steps:
