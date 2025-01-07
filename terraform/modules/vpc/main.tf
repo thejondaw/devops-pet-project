@@ -117,7 +117,7 @@ resource "aws_network_acl" "alb" {
     rule_no    = 90
     action     = "deny"
     cidr_block = "0.0.0.0/0"
-    from_port  = 3389  # RDP
+    from_port  = 3389 # RDP
     to_port    = 3389
   }
 
@@ -126,7 +126,7 @@ resource "aws_network_acl" "alb" {
     rule_no    = 91
     action     = "deny"
     cidr_block = "0.0.0.0/0"
-    from_port  = 22    # SSH
+    from_port  = 22 # SSH
     to_port    = 22
   }
 
