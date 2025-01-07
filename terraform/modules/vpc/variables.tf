@@ -46,9 +46,9 @@ variable "vpc_configuration" {
   }
 }
 
-# Variable - Allowed IPs
-variable "allowed_ips" {
-  description = "List of allowed IP ranges for web access"
-  type        = list(string)
-  default     = ["YOUR.OFFICE.IP/32", "YOUR.VPN.IP/32"]
+# Variable - Cluster Name
+variable "cluster_name" {
+  description = "Name of the EKS cluster for subnet discovery tags"
+  type        = string
+  default     = "" # Пустая строка если кластер еще не создан
 }

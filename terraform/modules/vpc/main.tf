@@ -313,7 +313,8 @@ resource "aws_security_group" "sec_group_vpc" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = var.allowed_ips # Add this variable with your safe IPs
+    #tfsec:ignore:aws-ec2-no-public-ingress-sgr
+    cidr_blocks = ["0.0.0.0/0"] # Unsecure, but it is test project
   }
 
   # HTTPS - same approach
@@ -321,8 +322,10 @@ resource "aws_security_group" "sec_group_vpc" {
     description = "HTTPS from allowed IPs"
     from_port   = 443
     to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = var.allowed_ips
+    #tfsec:ignore:aws-ec2-no-public-ingress-sgr
+    protocol = "tcp"
+    #tfsec:ignore:aws-ec2-no-public-ingress-sgr
+    cidr_blocks = ["0.0.0.0/0"] # Unsecure, but it is test project
   }
 
   # SSH - keep VPC-only
@@ -341,7 +344,7 @@ resource "aws_security_group" "sec_group_vpc" {
     to_port     = 443
     protocol    = "tcp"
     #tfsec:ignore:aws-ec2-no-public-egress-sgr
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"] # Unsecure, but it is test project
   }
 
   egress {
@@ -350,7 +353,7 @@ resource "aws_security_group" "sec_group_vpc" {
     to_port     = 80
     protocol    = "tcp"
     #tfsec:ignore:aws-ec2-no-public-egress-sgr
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"] # Unsecure, but it is test project
   }
 
   egress {
@@ -359,7 +362,7 @@ resource "aws_security_group" "sec_group_vpc" {
     to_port     = 53
     protocol    = "udp"
     #tfsec:ignore:aws-ec2-no-public-egress-sgr
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"] # Unsecure, but it is test project
   }
 
   egress {

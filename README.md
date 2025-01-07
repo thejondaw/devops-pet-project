@@ -179,6 +179,11 @@ The following security checks are intentionally skipped for development purposes
  - Subnets auto-assign public IPs for EKS worker nodes access
  - Production should use NAT Gateway + private subnets
 
+- **Open Security Groups**
+  - Security groups allow inbound traffic from 0.0.0.0/0
+  - In production should be restricted to corporate IPs/VPN ranges
+  - Trade-off: Easier development vs Security best practices
+
 ### 💾 Database & Backups
 - **RDS Security Settings** *(CKV_AWS_162, CKV_AWS_313, CKV_AWS_139)*
  - IAM authentication disabled
