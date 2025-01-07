@@ -4,12 +4,6 @@ region = "us-east-2"
 # Backend state bucket
 backend_bucket = "alexsuff"
 
-# Environment name
-environment = "prod"
-
-# Cost tracking
-cost_center = "devops-infrastructure"
-
 # Access control
 allowed_ips = [
   "10.0.0.0/8", # Internal network

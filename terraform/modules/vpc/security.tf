@@ -22,6 +22,52 @@ resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
   })
 }
 
+# KMS key for VPC Flow Logs encryption
+resource "aws_kms_key" "flow_logs" {
+  description             = "${var.environment} VPC Flow Logs Encryption Key"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM Root User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow CloudWatch to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "logs.${data.aws_region.current.name}.amazonaws.com"
+        }
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:DescribeKey"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+
+  tags = merge(local.common_tags, {
+    Name = "${var.environment}-flow-logs-encryption"
+  })
+}
+
+resource "aws_kms_alias" "flow_logs" {
+  name          = "alias/${var.environment}-flow-logs"
+  target_key_id = aws_kms_key.flow_logs.key_id
+}
+
 # Main VPC Security Group
 resource "aws_security_group" "main_vpc_sg" {
   name        = "main-vpc-sg"
