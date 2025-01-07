@@ -337,6 +337,41 @@ resource "aws_security_group" "sec_group_vpc" {
     cidr_blocks = [var.vpc_configuration.cidr]
   }
 
+  # EKS Control Plane Ports
+  ingress {
+    description = "Kubernetes API Server"
+    from_port   = 6443
+    to_port     = 6443
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_configuration.cidr]
+  }
+
+  ingress {
+    description = "Kubelet API"
+    from_port   = 10250
+    to_port     = 10250
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_configuration.cidr]
+  }
+
+  # NodePort Services
+  ingress {
+    description = "NodePort Services"
+    from_port   = 30000
+    to_port     = 32767
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_configuration.cidr]
+  }
+
+  # DNS
+  ingress {
+    description = "DNS"
+    from_port   = 53
+    to_port     = 53
+    protocol    = "udp"
+    cidr_blocks = [var.vpc_configuration.cidr]
+  }
+
   # Required outbound rules
   egress {
     description = "HTTPS outbound"
