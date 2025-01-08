@@ -1,3 +1,6 @@
+# Generate static timestamp for naming consistency
+resource "time_static" "cluster_timestamp" {}
+
 locals {
   # Format: env-clustername-YYYYMMDDHHMMSS
   cluster_name = "${var.environment}-cluster-${formatdate("YYYYMMDDHHmmss", time_static.cluster_timestamp.rfc3339)}"
