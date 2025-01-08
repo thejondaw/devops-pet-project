@@ -227,13 +227,6 @@ resource "aws_eks_cluster" "study" {
     endpoint_public_access  = true
   }
 
-  encryption_config {
-    provider {
-      key_arn = aws_kms_key.eks.arn
-    }
-    resources = ["secrets"]
-  }
-
   enabled_cluster_log_types = [
     "api",
     "audit",
