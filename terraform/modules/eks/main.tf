@@ -354,7 +354,7 @@ resource "aws_kms_alias" "eks" {
 
 # =================== NODE GROUP =================== #
 
- resource "aws_launch_template" "eks_nodes" {
+resource "aws_launch_template" "eks_nodes" {
   name = "${local.cluster_name}-nodes-template"
 
   vpc_security_group_ids = [data.aws_security_group.eks_nodes.id]
