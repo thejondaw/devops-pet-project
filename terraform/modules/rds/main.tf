@@ -1,5 +1,3 @@
-data "aws_caller_identity" "current" {}
-
 # Fetch - VPC
 data "aws_vpc" "main" {
   filter {
@@ -40,12 +38,12 @@ resource "aws_rds_cluster_parameter_group" "aurora_postgresql" {
 
   parameter {
     name  = "log_statement"
-    value = "all" # Логируем все SQL запросы
+    value = "all"
   }
 
   parameter {
     name  = "log_min_duration_statement"
-    value = "1000" # Логируем запросы дольше 1 секунды
+    value = "1000"
   }
 }
 
@@ -63,10 +61,6 @@ resource "aws_rds_cluster" "aurora_postgresql" {
   vpc_security_group_ids          = [aws_security_group.sg_aurora.id]
   skip_final_snapshot             = true
   db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.aurora_postgresql.name
-
-  # Encryption settings
-  storage_encrypted = true
-  kms_key_id        = aws_kms_key.rds.arn
 
   backup_retention_period = 14 # Keep backups for 14 days
 
@@ -91,61 +85,9 @@ resource "aws_rds_cluster_instance" "rds_instance" {
   engine             = aws_rds_cluster.aurora_postgresql.engine
   engine_version     = aws_rds_cluster.aurora_postgresql.engine_version
 
-  # Performance Insights with encryption
-  performance_insights_enabled          = true
-  performance_insights_kms_key_id       = aws_kms_key.rds.arn
-  performance_insights_retention_period = 7 # Days
-
   # Enable enhanced monitoring
   monitoring_interval = 30
   monitoring_role_arn = aws_iam_role.rds_enhanced_monitoring.arn
-}
-
-# RDS KMS Key
-resource "aws_kms_key" "rds" {
-  description             = "KMS key for RDS encryption"
-  deletion_window_in_days = 7
-  enable_key_rotation     = true
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "Enable IAM Root User Permissions"
-        Effect = "Allow"
-        Principal = {
-          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        }
-        Action   = "kms:*"
-        Resource = "*"
-      },
-      {
-        Sid    = "Allow RDS to use the key"
-        Effect = "Allow"
-        Principal = {
-          Service = "rds.amazonaws.com"
-        }
-        Action = [
-          "kms:Encrypt",
-          "kms:Decrypt",
-          "kms:CreateGrant",
-          "kms:GenerateDataKey*",
-          "kms:DescribeKey"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-
-  tags = {
-    Name        = "${var.environment}-rds-encryption"
-    Environment = var.environment
-  }
-}
-
-resource "aws_kms_alias" "rds" {
-  name          = "alias/${var.environment}-rds"
-  target_key_id = aws_kms_key.rds.key_id
 }
 
 # =================== SUBNET GROUP =================== #

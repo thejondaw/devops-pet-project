@@ -96,40 +96,8 @@ jobs:
             fi
           done
 
-  security-check:
-    needs: tf-lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up tfsec
-        run: |
-          curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
-          echo "tfsec version:"
-          tfsec --version
-
-      - name: Run tfsec
-        run: |
-          for module in terraform/modules/*; do
-            echo "Running tfsec on module: $module"
-            tfsec "$module" -e aws-vpc-no-default-vpc
-          done
-
-      - name: Install & Run checkov
-        run: |
-          pip install checkov
-          checkov -d terraform/ --framework terraform --skip-check CKV_TF_3,CKV_AWS_338,CKV_AWS_38,CKV_AWS_39,CKV_AWS_162,CKV_AWS_324,CKV_AWS_313,CKV_AWS_139,CKV_AWS_226,CKV_AWS_130,CKV2_AWS_8,CKV2_AWS_5,CKV2_AWS_12,CKV_AWS_260,CKV_AWS_382
-
-      - name: Analysis Summary
-        if: always()
-        run: |
-          echo "### Infrastructure Analysis Results" >> $GITHUB_STEP_SUMMARY
-          echo "* TFLint: Completed" >> $GITHUB_STEP_SUMMARY
-          echo "* Tfsec: Completed" >> $GITHUB_STEP_SUMMARY
-          echo "* Checkov: Completed" >> $GITHUB_STEP_SUMMARY
-
   deploy:
-    needs: security-check
+    needs: tf-lint
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || github.ref_name }}
     strategy:

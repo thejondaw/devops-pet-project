@@ -52,9 +52,3 @@ variable "cluster_name" {
   type        = string
   default     = "" # Пустая строка если кластер еще не создан
 }
-
-variable "allowed_ips" {
-  description = "List of allowed IP ranges for web access"
-  type        = list(string)
-  default     = ["0.0.0.0/0"] # Allowing all IPs for development environment ONLY. DO NOT USE IN PRODUCTION!
-}

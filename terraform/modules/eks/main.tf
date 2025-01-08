@@ -1,8 +1,3 @@
-data "aws_caller_identity" "current" {}
-
-# Timestamp - Unique Naming
-resource "time_static" "cluster_timestamp" {}
-
 locals {
   # Format: env-clustername-YYYYMMDDHHMMSS
   cluster_name = "${var.environment}-cluster-${formatdate("YYYYMMDDHHmmss", time_static.cluster_timestamp.rfc3339)}"
@@ -85,6 +80,9 @@ data "aws_subnet" "api" {
 
 # Fetch - Current Region
 data "aws_region" "current" {}
+
+# Fetch Account ID
+data "aws_caller_identity" "current" {}
 
 # ================== IAM RESOURCES ================== #
 
@@ -200,60 +198,12 @@ resource "aws_iam_role_policy_attachment" "node_group_minimum_policies" {
 resource "aws_cloudwatch_log_group" "eks" {
   name              = "/aws/eks/${local.cluster_name}/cluster"
   retention_in_days = 7
-  kms_key_id        = aws_kms_key.cloudwatch.arn
 
   tags = merge(local.common_tags, {
     Name      = "${local.cluster_name}-logs"
     LogType   = "EKS-Cluster-Logs"
     Retention = "7-days"
   })
-}
-
-# CloudWatch KMS Key
-resource "aws_kms_key" "cloudwatch" {
-  description             = "CloudWatch Log Encryption"
-  deletion_window_in_days = 7
-  enable_key_rotation     = true
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "Enable IAM Root User Permissions"
-        Effect = "Allow"
-        Principal = {
-          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        }
-        Action   = "kms:*"
-        Resource = "*"
-      },
-      {
-        Sid    = "Allow CloudWatch to use the key"
-        Effect = "Allow"
-        Principal = {
-          Service = "logs.${data.aws_region.current.name}.amazonaws.com"
-        }
-        Action = [
-          "kms:Encrypt",
-          "kms:Decrypt",
-          "kms:ReEncrypt*",
-          "kms:GenerateDataKey*",
-          "kms:DescribeKey"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-
-  tags = {
-    Name        = "${var.environment}-cloudwatch-encryption"
-    Environment = var.environment
-  }
-}
-
-resource "aws_kms_alias" "cloudwatch" {
-  name          = "alias/${var.environment}-cloudwatch"
-  target_key_id = aws_kms_key.cloudwatch.key_id
 }
 
 # ================== EKS CLUSTER =================== #
@@ -264,7 +214,6 @@ resource "aws_eks_cluster" "study" {
   role_arn = aws_iam_role.eks_cluster.arn
   version  = var.eks_configuration.version
 
-  #tfsec:ignore:aws-eks-no-public-cluster-access-to-cidr
   vpc_config {
     subnet_ids = [
       data.aws_subnet.web.id,
@@ -272,9 +221,7 @@ resource "aws_eks_cluster" "study" {
       data.aws_subnet.api.id
     ]
     endpoint_private_access = true
-    #tfsec:ignore:aws-eks-no-public-cluster-access
     endpoint_public_access = true
-    # public_access_cidrs    = ["YOUR.OFFICE.IP/32"] # Your Office IP
   }
 
   encryption_config {
@@ -305,97 +252,7 @@ resource "aws_eks_cluster" "study" {
   })
 }
 
-# EKS KMS Key
-resource "aws_kms_key" "eks" {
-  description             = "EKS Secret Encryption Key"
-  deletion_window_in_days = 7
-  enable_key_rotation     = true
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "Enable IAM Root User Permissions"
-        Effect = "Allow"
-        Principal = {
-          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        }
-        Action   = "kms:*"
-        Resource = "*"
-      },
-      {
-        Sid    = "Allow EKS to use the key"
-        Effect = "Allow"
-        Principal = {
-          Service = "eks.amazonaws.com"
-        }
-        Action = [
-          "kms:Encrypt",
-          "kms:Decrypt",
-          "kms:CreateGrant",
-          "kms:GenerateDataKey*",
-          "kms:DescribeKey"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-
-  tags = {
-    Name        = "${var.environment}-eks-encryption"
-    Environment = var.environment
-  }
-}
-
-resource "aws_kms_alias" "eks" {
-  name          = "alias/${var.environment}-eks"
-  target_key_id = aws_kms_key.eks.key_id
-}
-
 # =================== NODE GROUP =================== #
-
-# Fetch - Security Group - EKS Nodes
-data "aws_security_group" "eks_nodes" {
-  filter {
-    name   = "tag:Name"
-    values = ["${var.environment}-eks-nodes"] # Должно совпадать с тегом в VPC модуле
-  }
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.main.id]
-  }
-}
-
-resource "aws_launch_template" "eks_nodes" {
-  name = "${local.cluster_name}-nodes-template"
-
-  vpc_security_group_ids = [data.aws_security_group.eks_nodes.id]
-
-  # Добавляем размер диска
-  block_device_mappings {
-    device_name = "/dev/xvda"
-    ebs {
-      volume_size           = var.eks_configuration.disk_size
-      volume_type          = "gp2"
-      delete_on_termination = true
-    }
-  }
-
-  instance_type = var.eks_configuration.instance_types[0]
-
-  metadata_options {
-    http_endpoint               = "enabled"
-    http_tokens                 = "required"
-    http_put_response_hop_limit = 1
-  }
-
-  tag_specifications {
-    resource_type = "instance"
-    tags = merge(local.common_tags, local.compute_tags, {
-      Name = "${local.cluster_name}-node"
-    })
-  }
-}
 
 # EKS - Node Group
 resource "aws_eks_node_group" "study" {
@@ -403,12 +260,6 @@ resource "aws_eks_node_group" "study" {
   node_group_name = "${local.cluster_name}-nodes"
   node_role_arn   = aws_iam_role.node_group.arn
   capacity_type   = "SPOT"
-
-
-  launch_template {
-    id      = aws_launch_template.eks_nodes.id
-    version = aws_launch_template.eks_nodes.latest_version
-  }
 
   subnet_ids = [data.aws_subnet.web.id, data.aws_subnet.api.id]
 
@@ -418,8 +269,8 @@ resource "aws_eks_node_group" "study" {
     min_size     = var.eks_configuration.min_size
   }
 
-#  instance_types = var.eks_configuration.instance_types
-#  disk_size      = var.eks_configuration.disk_size
+  instance_types = var.eks_configuration.instance_types
+  disk_size      = var.eks_configuration.disk_size
 
   update_config {
     max_unavailable = 1

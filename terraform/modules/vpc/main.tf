@@ -1,9 +1,7 @@
 # VPC (Virtual Private Cloud)
 resource "aws_vpc" "main" {
-  cidr_block           = var.vpc_configuration.cidr
-  instance_tenancy     = "default"
-  enable_dns_hostnames = true
-  enable_dns_support   = true
+  cidr_block       = var.vpc_configuration.cidr
+  instance_tenancy = "default"
 
   tags = {
     Name        = "devops-project-vpc"
@@ -19,15 +17,7 @@ resource "aws_vpc" "main" {
 resource "aws_subnet" "subnet_web" {
   vpc_id     = aws_vpc.main.id
   cidr_block = var.vpc_configuration.subnets.web.cidr_block
-  # We need auto-assign public IPs for EKS worker nodes to:
-  # - Pull container images
-  # - Access AWS services
-  # - Connect to the internet for updates
-  # In production consider:
-  # - Using private subnets with NAT Gateway
-  # - Implementing container image caching
-  # - Setting up VPC endpoints for AWS services
-  #tfsec:ignore:aws-ec2-no-public-ip-subnet
+
   map_public_ip_on_launch = true
   availability_zone       = var.vpc_configuration.subnets.web.az
 
@@ -44,55 +34,10 @@ resource "aws_subnet" "subnet_web" {
   }
 }
 
-# Consider adding these security controls:
-resource "aws_network_acl" "web" {
-  vpc_id     = aws_vpc.main.id
-  subnet_ids = [aws_subnet.subnet_web.id]
-
-  # Restrict inbound traffic
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 80
-    to_port    = 80
-  }
-
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 110
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 443
-    to_port    = 443
-  }
-
-  # Allow outbound traffic with ephemeral ports
-  egress {
-    protocol   = -1
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 0
-    to_port    = 0
-  }
-
-  tags = {
-    Name        = "web-nacl"
-    Environment = var.environment
-  }
-}
-
 # Public Subnet #2 - ALB
 resource "aws_subnet" "subnet_alb" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = var.vpc_configuration.subnets.alb.cidr_block
-  # Public IP required for ALB to:
-  # - Accept inbound traffic from internet
-  # - Route traffic to backend services
-  # - Support SSL termination
-  #tfsec:ignore:aws-ec2-no-public-ip-subnet
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = var.vpc_configuration.subnets.alb.cidr_block
   map_public_ip_on_launch = true
   availability_zone       = var.vpc_configuration.subnets.alb.az
 
@@ -105,72 +50,6 @@ resource "aws_subnet" "subnet_alb" {
     Tier        = "alb"
     # Required tag for ALB auto-discovery
     "kubernetes.io/role/elb" = "1"
-  }
-}
-
-# NACL for ALB subnet
-resource "aws_network_acl" "alb" {
-  vpc_id     = aws_vpc.main.id
-  subnet_ids = [aws_subnet.subnet_alb.id]
-
-  # Deny dangerous ports first
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 90
-    action     = "deny"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 3389 # RDP
-    to_port    = 3389
-  }
-
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 91
-    action     = "deny"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 22 # SSH
-    to_port    = 22
-  }
-
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 80
-    to_port    = 80
-  }
-
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 110
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 443
-    to_port    = 443
-  }
-
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 120
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 1024
-    to_port    = 65535
-  }
-
-  egress {
-    protocol   = -1
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 0
-    to_port    = 0
-  }
-
-  tags = {
-    Name        = "alb-nacl"
-    Environment = var.environment
   }
 }
 
@@ -309,27 +188,22 @@ resource "aws_security_group" "sec_group_vpc" {
   description = "Security group for VPC web and internal access"
   vpc_id      = aws_vpc.main.id
 
-  # HTTP - restrict to known IPs or your office range instead of 0.0.0.0/0
   ingress {
     description = "HTTP from allowed IPs"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    #tfsec:ignore:aws-vpc-no-public-ingress-sgr
-    cidr_blocks = var.allowed_ips
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # HTTPS - same approach
   ingress {
     description = "HTTPS from allowed IPs"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    #tfsec:ignore:aws-vpc-no-public-ingress-sgr
-    cidr_blocks = var.allowed_ips
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # SSH - keep VPC-only
   ingress {
     description = "SSH from VPC only"
     from_port   = 22
@@ -338,40 +212,12 @@ resource "aws_security_group" "sec_group_vpc" {
     cidr_blocks = [var.vpc_configuration.cidr]
   }
 
-  # Required outbound rules
   egress {
-    description = "HTTPS outbound"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    #tfsec:ignore:aws-ec2-no-public-egress-sgr
-    cidr_blocks = var.allowed_ips
-  }
-
-  egress {
-    description = "HTTP outbound"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    #tfsec:ignore:aws-ec2-no-public-egress-sgr
-    cidr_blocks = var.allowed_ips
-  }
-
-  egress {
-    description = "DNS"
-    from_port   = 53
-    to_port     = 53
-    protocol    = "udp"
-    #tfsec:ignore:aws-ec2-no-public-egress-sgr
-    cidr_blocks = var.allowed_ips
-  }
-
-  egress {
-    description = "VPC internal"
+    description = "Allow all outbound traffic"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = [var.vpc_configuration.cidr]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {
@@ -380,46 +226,5 @@ resource "aws_security_group" "sec_group_vpc" {
     Project     = "devops-project"
     ManagedBy   = "terraform"
     Type        = "vpc-security"
-  }
-}
-
-# Security Group for EKS nodes
-resource "aws_security_group" "eks_nodes" {
-  name        = "${var.environment}-eks-nodes-sg"
-  description = "Security group for EKS worker nodes"
-  vpc_id      = aws_vpc.main.id
-
-  # Разрешаем весь трафик между нодами
-  ingress {
-    description = "Allow nodes to communicate with each other"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self        = true
-  }
-
-  # Разрешаем доступ к API серверу
-  ingress {
-    description     = "Allow worker nodes to communicate with control plane"
-    from_port       = 0
-    to_port         = 65535
-    protocol        = "tcp"
-    security_groups = [aws_security_group.sec_group_vpc.id]
-  }
-
-  # Нужен для скачивания образов и обновлений
-  egress {
-    description = "Allow all outbound traffic"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    #tfsec:ignore:aws-ec2-no-public-egress-sgr
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name                                        = "${var.environment}-eks-nodes"
-    Environment                                 = var.environment
-    "kubernetes.io/cluster/${var.cluster_name}" = "owned"
   }
 }

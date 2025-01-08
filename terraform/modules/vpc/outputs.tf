@@ -1,3 +1,4 @@
+
 # Output - VPC ID
 output "vpc_id" {
   description = "ID of the created VPC"
@@ -47,8 +48,4 @@ output "network_configuration" {
       }
     }
   }
-}
-
-output "eks_nodes_sg_id" {
-  value = aws_security_group.eks_nodes.id
 }
