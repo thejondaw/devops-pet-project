@@ -65,9 +65,6 @@ resource "helm_release" "argocd" {
 
 # ========== HashiCorp Vault ========== #
 
-# Fetch Account ID
-data "aws_caller_identity" "current" {}
-
 # IAM Role - Vault
 resource "aws_iam_role" "vault" {
   name = "${var.environment}-vault-role"
