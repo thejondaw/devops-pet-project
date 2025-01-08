@@ -376,7 +376,7 @@ resource "aws_launch_template" "eks_nodes" {
     device_name = "/dev/xvda"
     ebs {
       volume_size           = var.eks_configuration.disk_size
-      volume_type          = "gp2"
+      volume_type           = "gp2"
       delete_on_termination = true
     }
   }
@@ -418,8 +418,8 @@ resource "aws_eks_node_group" "study" {
     min_size     = var.eks_configuration.min_size
   }
 
-#  instance_types = var.eks_configuration.instance_types
-#  disk_size      = var.eks_configuration.disk_size
+  #  instance_types = var.eks_configuration.instance_types
+  #  disk_size      = var.eks_configuration.disk_size
 
   update_config {
     max_unavailable = 1
