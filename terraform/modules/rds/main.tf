@@ -91,10 +91,6 @@ resource "aws_rds_cluster_instance" "rds_instance" {
   instance_class     = "db.serverless"
   engine             = aws_rds_cluster.aurora_postgresql.engine
   engine_version     = aws_rds_cluster.aurora_postgresql.engine_version
-
-  # Enable enhanced monitoring
-  monitoring_interval = 30
-  monitoring_role_arn = aws_iam_role.rds_enhanced_monitoring.arn
 }
 
 # =================== SUBNET GROUP =================== #
