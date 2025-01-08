@@ -56,5 +56,5 @@ variable "cluster_name" {
 variable "allowed_ips" {
   description = "List of allowed IP ranges for web access"
   type        = list(string)
-  default     = ["0.0.0.0/0"]  # Allowing all IPs for development environment ONLY. DO NOT USE IN PRODUCTION!
+  default     = ["0.0.0.0/0"] # Allowing all IPs for development environment ONLY. DO NOT USE IN PRODUCTION!
 }
