@@ -116,7 +116,6 @@ resource "aws_security_group" "sg_aurora" {
   description = "Allow Aurora PostgreSQL access"
   vpc_id      = data.aws_vpc.main.id
 
-  # Incoming traffic for PostgreSQL only
   ingress {
     description = "Allow PostgreSQL traffic from VPC CIDR"
     from_port   = var.db_configuration.port
@@ -125,16 +124,12 @@ resource "aws_security_group" "sg_aurora" {
     cidr_blocks = [data.aws_vpc.main.cidr_block]
   }
 
-  # Outbound traffic to required AWS services only
   egress {
-    description = "Allow outbound traffic to AWS services"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    prefix_list_ids = [
-      "pl-6da54004", # AWS S3
-      "pl-63a5400a"  # AWS DynamoDB
-    ]
+    description = "Allow all outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {
