@@ -1,0 +1,71 @@
+name: CD - Infrastructure Destruction
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to destroy"
+        required: true
+        default: "develop"
+        type: choice
+        options: [develop, stage, master]
+
+env:
+  TF_STATE_BUCKET: alexsuff
+  AWS_REGION: us-east-2
+  TARGET_ENV: ${{ github.event.inputs.environment || github.ref_name }}
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Destroy Infrastructure
+        run: |
+
+          for module in tools; do
+            echo "Destroying $module..."
+            cd terraform/modules/$module
+            terraform init \
+              -backend-config="bucket=${{ env.TF_STATE_BUCKET }}" \
+              -backend-config="key=environments/${{ env.TARGET_ENV }}/$module.tfstate" \
+              -backend-config="region=${{ env.AWS_REGION }}"
+            terraform destroy -auto-approve \
+              -var-file=../../environments/${{ env.TARGET_ENV }}/terraform.tfvars
+            cd ../../../
+          done
+
+          for module in rds eks; do
+            echo "Destroying $module..."
+            cd terraform/modules/$module
+            terraform init \
+              -backend-config="bucket=${{ env.TF_STATE_BUCKET }}" \
+              -backend-config="key=environments/${{ env.TARGET_ENV }}/$module.tfstate" \
+              -backend-config="region=${{ env.AWS_REGION }}"
+            terraform destroy -auto-approve \
+              -var-file=../../environments/${{ env.TARGET_ENV }}/terraform.tfvars
+            cd ../../../
+            sleep 30
+          done
+
+          echo "Destroying vpc..."
+          cd terraform/modules/vpc
+          terraform init \
+            -backend-config="bucket=${{ env.TF_STATE_BUCKET }}" \
+            -backend-config="key=environments/${{ env.TARGET_ENV }}/vpc.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}"
+          terraform destroy -auto-approve \
+            -var-file=../../environments/${{ env.TARGET_ENV }}/terraform.tfvars \
+            -refresh=true
