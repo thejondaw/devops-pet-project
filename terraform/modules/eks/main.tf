@@ -254,49 +254,6 @@ resource "aws_eks_cluster" "study" {
 
 # =================== NODE GROUP =================== #
 
-# Fetch - Security Group - EKS Nodes
-data "aws_security_group" "eks_nodes" {
-  filter {
-    name   = "tag:Name"
-    values = ["${var.environment}-eks-nodes"] # Должно совпадать с тегом в VPC модуле
-  }
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.main.id]
-  }
-}
-
-resource "aws_launch_template" "eks_nodes" {
-  name = "${local.cluster_name}-nodes-template"
-
-  vpc_security_group_ids = [data.aws_security_group.eks_nodes.id]
-
-  # Добавляем размер диска
-  block_device_mappings {
-    device_name = "/dev/xvda"
-    ebs {
-      volume_size           = var.eks_configuration.disk_size
-      volume_type          = "gp2"
-      delete_on_termination = true
-    }
-  }
-
-  instance_type = var.eks_configuration.instance_types[0]
-
-  metadata_options {
-    http_endpoint               = "enabled"
-    http_tokens                 = "required"
-    http_put_response_hop_limit = 1
-  }
-
-  tag_specifications {
-    resource_type = "instance"
-    tags = merge(local.common_tags, local.compute_tags, {
-      Name = "${local.cluster_name}-node"
-    })
-  }
-}
-
 # EKS - Node Group
 resource "aws_eks_node_group" "study" {
   cluster_name    = aws_eks_cluster.study.name
@@ -312,8 +269,8 @@ resource "aws_eks_node_group" "study" {
     min_size     = var.eks_configuration.min_size
   }
 
-#  instance_types = var.eks_configuration.instance_types
-#  disk_size      = var.eks_configuration.disk_size
+ instance_types = var.eks_configuration.instance_types
+ disk_size      = var.eks_configuration.disk_size
 
   update_config {
     max_unavailable = 1
