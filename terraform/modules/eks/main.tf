@@ -358,7 +358,7 @@ resource "aws_kms_alias" "eks" {
 data "aws_security_group" "eks_nodes" {
   filter {
     name   = "tag:Name"
-    values = ["${var.environment}-eks-nodes"]  # Должно совпадать с тегом в VPC модуле
+    values = ["${var.environment}-eks-nodes"] # Должно совпадать с тегом в VPC модуле
   }
   filter {
     name   = "vpc-id"
