@@ -313,8 +313,8 @@ resource "aws_security_group" "sec_group_vpc" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    #tfsec:ignore:aws-ec2-no-public-ingress-sgr
-    cidr_blocks = ["0.0.0.0/0"] # Unsecure, but it is test project
+    #tfsec:ignore:aws-vpc-no-public-ingress-sgr
+    cidr_blocks = var.allowed_ips
   }
 
   # HTTPS - same approach
@@ -322,10 +322,9 @@ resource "aws_security_group" "sec_group_vpc" {
     description = "HTTPS from allowed IPs"
     from_port   = 443
     to_port     = 443
-    #tfsec:ignore:aws-ec2-no-public-ingress-sgr
-    protocol = "tcp"
-    #tfsec:ignore:aws-ec2-no-public-ingress-sgr
-    cidr_blocks = ["0.0.0.0/0"] # Unsecure, but it is test project
+    protocol    = "tcp"
+    #tfsec:ignore:aws-vpc-no-public-ingress-sgr
+    cidr_blocks = var.allowed_ips
   }
 
   # SSH - keep VPC-only
@@ -337,38 +336,39 @@ resource "aws_security_group" "sec_group_vpc" {
     cidr_blocks = [var.vpc_configuration.cidr]
   }
 
-  # EKS Control Plane Ports
-  ingress {
-    description = "Kubernetes API Server"
-    from_port   = 6443
-    to_port     = 6443
+  # Required outbound rules
+  egress {
+    description = "HTTPS outbound"
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = [var.vpc_configuration.cidr]
+    #tfsec:ignore:aws-ec2-no-public-egress-sgr
+    cidr_blocks = var.allowed_ips
   }
 
-  ingress {
-    description = "Kubelet API"
-    from_port   = 10250
-    to_port     = 10250
+  egress {
+    description = "HTTP outbound"
+    from_port   = 80
+    to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = [var.vpc_configuration.cidr]
+    #tfsec:ignore:aws-ec2-no-public-egress-sgr
+    cidr_blocks = var.allowed_ips
   }
 
-  # NodePort Services
-  ingress {
-    description = "NodePort Services"
-    from_port   = 30000
-    to_port     = 32767
-    protocol    = "tcp"
-    cidr_blocks = [var.vpc_configuration.cidr]
-  }
-
-  # DNS
-  ingress {
+  egress {
     description = "DNS"
     from_port   = 53
     to_port     = 53
     protocol    = "udp"
+    #tfsec:ignore:aws-ec2-no-public-egress-sgr
+    cidr_blocks = var.allowed_ips
+  }
+
+  egress {
+    description = "VPC internal"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = [var.vpc_configuration.cidr]
   }
 
