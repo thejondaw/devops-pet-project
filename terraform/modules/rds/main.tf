@@ -47,6 +47,13 @@ resource "aws_rds_cluster_parameter_group" "aurora_postgresql" {
   }
 }
 
+# Generate random password for RDS
+resource "random_password" "aurora_password" {
+  length           = 16
+  special          = true
+  override_special = "!#$%"
+}
+
 # Serverless v2 RDS cluster - Aurora PostgreSQL
 resource "aws_rds_cluster" "aurora_postgresql" {
   cluster_identifier              = "${var.environment}-aurora-cluster"
