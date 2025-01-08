@@ -356,12 +356,41 @@ resource "aws_kms_alias" "eks" {
 
 # =================== NODE GROUP =================== #
 
+# Сначала создаем launch template
+resource "aws_launch_template" "eks_nodes" {
+  name_prefix = "${local.cluster_name}-node-"
+
+  vpc_security_group_ids = [
+    data.aws_eks_cluster.cluster.vpc_config[0].cluster_security_group_id
+  ]
+
+  # Добавляем настройки IMDSv2
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"    # Требуем IMDSv2 токены
+    http_put_response_hop_limit = 1
+    instance_metadata_tags      = "enabled"
+  }
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = merge(local.common_tags, local.compute_tags, {
+      Name = "${local.cluster_name}-node"
+    })
+  }
+}
+
 # EKS - Node Group
 resource "aws_eks_node_group" "study" {
   cluster_name    = aws_eks_cluster.study.name
   node_group_name = "${local.cluster_name}-nodes"
   node_role_arn   = aws_iam_role.node_group.arn
   capacity_type   = "SPOT"
+
+  launch_template {
+    id      = aws_launch_template.eks_nodes.id
+    version = aws_launch_template.eks_nodes.latest_version
+  }
 
   subnet_ids = [data.aws_subnet.web.id, data.aws_subnet.api.id]
 
