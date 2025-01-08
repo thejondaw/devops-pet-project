@@ -221,7 +221,7 @@ resource "aws_eks_cluster" "study" {
       data.aws_subnet.api.id
     ]
     endpoint_private_access = true
-    endpoint_public_access = true
+    endpoint_public_access  = true
   }
 
   encryption_config {
@@ -269,8 +269,8 @@ resource "aws_eks_node_group" "study" {
     min_size     = var.eks_configuration.min_size
   }
 
- instance_types = var.eks_configuration.instance_types
- disk_size      = var.eks_configuration.disk_size
+  instance_types = var.eks_configuration.instance_types
+  disk_size      = var.eks_configuration.disk_size
 
   update_config {
     max_unavailable = 1
