@@ -363,11 +363,6 @@ resource "aws_eks_node_group" "study" {
   node_role_arn   = aws_iam_role.node_group.arn
   capacity_type   = "SPOT"
 
-  launch_template {
-    id      = aws_launch_template.eks_nodes.id
-    version = aws_launch_template.eks_nodes.latest_version
-  }
-
   subnet_ids = [data.aws_subnet.web.id, data.aws_subnet.api.id]
 
   scaling_config {
