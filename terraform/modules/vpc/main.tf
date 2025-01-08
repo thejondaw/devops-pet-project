@@ -382,3 +382,44 @@ resource "aws_security_group" "sec_group_vpc" {
     Type        = "vpc-security"
   }
 }
+
+# Security Group for EKS nodes
+resource "aws_security_group" "eks_nodes" {
+  name        = "${var.environment}-eks-nodes-sg"
+  description = "Security group for EKS worker nodes"
+  vpc_id      = aws_vpc.main.id
+
+  # Разрешаем весь трафик между нодами
+  ingress {
+    description = "Allow nodes to communicate with each other"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    self        = true
+  }
+
+  # Разрешаем доступ к API серверу
+  ingress {
+    description     = "Allow worker nodes to communicate with control plane"
+    from_port       = 0
+    to_port         = 65535
+    protocol        = "tcp"
+    security_groups = [aws_security_group.sec_group_vpc.id]
+  }
+
+  # Нужен для скачивания образов и обновлений
+  egress {
+    description = "Allow all outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    #tfsec:ignore:aws-ec2-no-public-egress-sgr
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name        = "${var.environment}-eks-nodes"
+    Environment = var.environment
+    "kubernetes.io/cluster/${var.cluster_name}" = "owned"
+  }
+}
