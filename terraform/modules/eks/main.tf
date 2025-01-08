@@ -354,6 +354,18 @@ resource "aws_kms_alias" "eks" {
 
 # =================== NODE GROUP =================== #
 
+# Fetch - Security Group - EKS Nodes
+data "aws_security_group" "eks_nodes" {
+  filter {
+    name   = "tag:Name"
+    values = ["${var.environment}-eks-nodes"]  # Должно совпадать с тегом в VPC модуле
+  }
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.main.id]
+  }
+}
+
 resource "aws_launch_template" "eks_nodes" {
   name = "${local.cluster_name}-nodes-template"
 
