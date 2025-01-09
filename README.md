@@ -1,13 +1,9 @@
 # 🏗️ Enterprise-Grade Three-Tier Architecture on AWS
 
 [![CI - API](https://github.com/thejondaw/devops-project/actions/workflows/ci-api.yaml/badge.svg)](https://github.com/thejondaw/devops-project/actions/workflows/ci-api.yaml)
-
 [![CI - Web](https://github.com/thejondaw/devops-project/actions/workflows/ci-web.yaml/badge.svg)](https://github.com/thejondaw/devops-project/actions/workflows/ci-web.yaml)
-
 [![CD - Infrastructure](https://github.com/thejondaw/devops-project/actions/workflows/cd-infrastructure.yaml/badge.svg)](https://github.com/thejondaw/devops-project/actions/workflows/cd-infrastructure.yaml)
-
 [![CD - Post Install](https://github.com/thejondaw/devops-project/actions/workflows/post-install.yaml/badge.svg)](https://github.com/thejondaw/devops-project/actions/workflows/post-install.yaml)
-
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=thejondaw_devops-project&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=thejondaw_devops-project)
 
 Production-ready implementation of a three-tier architecture leveraging modern DevOps practices, Infrastructure as Code, and GitOps methodologies.
