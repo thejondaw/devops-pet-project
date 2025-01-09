@@ -65,9 +65,8 @@ resource "aws_db_instance" "postgresql" {
   instance_class = "db.t4g.micro"
 
   # Storage configuration
-  allocated_storage     = 10
-  storage_type          = "gp3"
-  storage_throughput    = 125
+  allocated_storage     = 20
+  storage_type          = "gp2"
   max_allocated_storage = 0
 
   # Database settings
