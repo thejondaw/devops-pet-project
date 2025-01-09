@@ -1,4 +1,4 @@
-name: CI - Create/Update WEB
+name: CI - Backend
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -9,13 +9,13 @@ on:
   push:
     branches: ["master", "stage", "develop"]
     paths:
-      - "apps/web/**"
-      - ".github/workflows/ci-web.yaml"
+      - "apps/api/**"
+      - ".github/workflows/ci-api.yaml"
       - "sonar-project.properties"
 
 env:
-  DOCKER_REPO: ${{ secrets.DOCKERHUB_USERNAME }}/devops-web
-  WORKING_DIRECTORY: apps/web
+  DOCKER_REPO: ${{ secrets.DOCKERHUB_USERNAME }}/devops-api
+  WORKING_DIRECTORY: apps/api
 
 jobs:
   lint:
@@ -24,10 +24,22 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      # Enhanced caching for Node.js
+      - name: Cache Node modules and NPM
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/node_modules
+            ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}-
+            ${{ runner.os }}-npm-
+
       - uses: actions/setup-node@v3
         with:
           node-version: "14"
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: ${{ env.WORKING_DIRECTORY }}/package-lock.json
 
       - name: Install & Lint
@@ -49,22 +61,30 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      # Enhanced caching for Node.js
+      - name: Cache Node modules and NPM
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/node_modules
+            ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}-
+            ${{ runner.os }}-npm-
+
       - uses: actions/setup-node@v3
         with:
           node-version: "14"
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: ${{ env.WORKING_DIRECTORY }}/package-lock.json
 
       - name: Test with Coverage
         working-directory: ${{ env.WORKING_DIRECTORY }}
         continue-on-error: true # Don't stop when one of tests fails
-        env:
-          JEST_JUNIT_OUTPUT_DIR: "coverage"
-          JEST_JUNIT_OUTPUT_NAME: "junit.xml"
         run: |
           npm install
-          npm install --save-dev jest jest-junit
-          npm test -- --coverage --testMatch='**/${{ matrix.test-type }}/**/*.test.js' --reporters=default --reporters=jest-junit
+          npm test -- --coverage --testMatch='**/${{ matrix.test-type }}/**/*.test.js'
 
   sonarqube:
     needs: test
@@ -102,6 +122,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      # Cache Docker layers
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
       - name: Check artifact size
         run: |
           find ${{ env.WORKING_DIRECTORY }} -type f -size +100M | tee large-files.txt
@@ -116,6 +145,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # Install cosign for image signing
+      - name: Install cosign
+        uses: sigstore/cosign-installer@main
+
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
@@ -126,6 +159,13 @@ jobs:
             ${{ env.DOCKER_REPO }}:${{ github.ref == 'refs/heads/master' && 'latest' || github.ref == 'refs/heads/stage' && 'stage' || 'develop' }}
           cache-from: type=registry,ref=${{ env.DOCKER_REPO }}:buildcache
           cache-to: type=registry,ref=${{ env.DOCKER_REPO }}:buildcache,mode=max
+
+      # Sign the container image
+      - name: Sign container image
+        run: |
+          cosign sign --key env://COSIGN_PRIVATE_KEY ${DOCKER_REPO}:${GITHUB_SHA}
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
 
   trivy:
     needs: build

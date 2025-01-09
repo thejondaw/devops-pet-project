@@ -32,9 +32,10 @@ data "aws_subnet" "db" {
 
 # ===================== DATABASE ===================== #
 
-resource "aws_rds_cluster_parameter_group" "aurora_postgresql" {
-  family = "aurora-postgresql15"
-  name   = "${var.environment}-aurora-params"
+# Parameter group for PostgreSQL logging
+resource "aws_db_parameter_group" "postgresql" {
+  family = "postgres15"
+  name   = "${var.environment}-postgres-params"
 
   parameter {
     name  = "log_statement"
@@ -48,60 +49,79 @@ resource "aws_rds_cluster_parameter_group" "aurora_postgresql" {
 }
 
 # Generate random password for RDS
-resource "random_password" "aurora_password" {
+resource "random_password" "postgresql_password" {
   length           = 16
   special          = true
   override_special = "!#$%"
 }
 
-# Serverless v2 RDS cluster - Aurora PostgreSQL
-resource "aws_rds_cluster" "aurora_postgresql" {
-  cluster_identifier              = "${var.environment}-aurora-cluster"
-  engine                          = "aurora-postgresql"
-  engine_mode                     = "provisioned"
-  engine_version                  = "15.3"
-  database_name                   = var.db_configuration.name
-  master_username                 = var.db_configuration.username
-  master_password                 = random_password.aurora_password.result
-  port                            = var.db_configuration.port
-  db_subnet_group_name            = aws_db_subnet_group.aurora_subnet_group.name
-  vpc_security_group_ids          = [aws_security_group.sg_aurora.id]
-  skip_final_snapshot             = true
-  db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.aurora_postgresql.name
+# Main PostgreSQL instance with cost-effective settings
+resource "aws_db_instance" "postgresql" {
+  identifier = "${var.environment}-postgres"
 
-  backup_retention_period = 14 # Keep backups for 14 days
+  # Engine configuration
+  engine         = "postgres"
+  engine_version = "15.3"
+  instance_class = "db.t4g.micro"
 
-  serverlessv2_scaling_configuration {
-    max_capacity = 1.0
-    min_capacity = 0.5
-  }
+  # Storage configuration
+  allocated_storage     = 10
+  storage_type          = "gp3"
+  storage_throughput    = 125
+  max_allocated_storage = 0
+
+  # Database settings
+  db_name  = var.db_configuration.name
+  username = var.db_configuration.username
+  password = random_password.postgresql_password.result
+  port     = var.db_configuration.port
+
+  # Network configuration
+  db_subnet_group_name   = aws_db_subnet_group.postgresql_subnet_group.name
+  vpc_security_group_ids = [aws_security_group.sg_postgresql.id]
+  publicly_accessible    = false
+  multi_az               = false
+  network_type           = "IPV4"
+
+  # Backup settings
+  backup_retention_period = 1
+  backup_window           = "03:00-04:00"
+  maintenance_window      = "Mon:04:00-Mon:05:00"
+
+  # Additional features
+  performance_insights_enabled = false
+  monitoring_interval          = 0
+
+  # Version management
+  auto_minor_version_upgrade  = true
+  allow_major_version_upgrade = false
+
+  # Protection settings
+  deletion_protection      = false
+  skip_final_snapshot      = true
+  delete_automated_backups = true
+
+  # Parameters
+  parameter_group_name = aws_db_parameter_group.postgresql.name
 
   tags = {
-    Name        = "${var.environment}-aurora-cluster"
+    Name        = "${var.environment}-postgres"
     Environment = var.environment
     Project     = "devops-project"
     ManagedBy   = "terraform"
-    Engine      = "aurora-postgresql"
+    Engine      = "postgresql"
   }
-}
-
-# Instance - RDS Cluster
-resource "aws_rds_cluster_instance" "rds_instance" {
-  cluster_identifier = aws_rds_cluster.aurora_postgresql.id
-  instance_class     = "db.serverless"
-  engine             = aws_rds_cluster.aurora_postgresql.engine
-  engine_version     = aws_rds_cluster.aurora_postgresql.engine_version
 }
 
 # =================== SUBNET GROUP =================== #
 
-# Subnet Group - RDS
-resource "aws_db_subnet_group" "aurora_subnet_group" {
-  name       = "aurora-subnet-group"
+# Subnet Group for RDS networking
+resource "aws_db_subnet_group" "postgresql_subnet_group" {
+  name       = "postgres-subnet-group"
   subnet_ids = [data.aws_subnet.api.id, data.aws_subnet.db.id]
 
   tags = {
-    Name        = "devops-project-aurora-subnet-group"
+    Name        = "devops-project-postgres-subnet-group"
     Environment = var.environment
     Project     = "devops-project"
     ManagedBy   = "terraform"
@@ -110,10 +130,10 @@ resource "aws_db_subnet_group" "aurora_subnet_group" {
 
 # ================= SECURITY GROUP =================== #
 
-# Security Group - RDS Access
-resource "aws_security_group" "sg_aurora" {
-  name        = "aurora-db"
-  description = "Allow Aurora PostgreSQL access"
+# Security Group for PostgreSQL access control
+resource "aws_security_group" "sg_postgresql" {
+  name        = "postgres-db"
+  description = "Allow PostgreSQL access"
   vpc_id      = data.aws_vpc.main.id
 
   ingress {
@@ -133,7 +153,7 @@ resource "aws_security_group" "sg_aurora" {
   }
 
   tags = {
-    Name        = "devops-project-aurora-sg"
+    Name        = "devops-project-postgres-sg"
     Environment = var.environment
     Project     = "devops-project"
     ManagedBy   = "terraform"

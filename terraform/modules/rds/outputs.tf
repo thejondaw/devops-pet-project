@@ -1,16 +1,17 @@
 # Output - DB - Endpoint
 output "db_endpoint" {
-  description = "RDS cluster endpoint"
-  value       = aws_rds_cluster.aurora_postgresql.endpoint
+  description = "Database endpoint"
+  value       = aws_db_instance.postgresql.endpoint
 }
 
 # Output - DB - Name
 output "db_name" {
   description = "Database name"
-  value       = aws_rds_cluster.aurora_postgresql.database_name
+  value       = aws_db_instance.postgresql.db_name
 }
 
+# Output - DB Password
 output "database_password" {
-  value     = random_password.aurora_password.result
+  value     = random_password.postgresql_password.result
   sensitive = true
 }

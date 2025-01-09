@@ -1,12 +1,11 @@
 # 🏗️ Enterprise-Grade Three-Tier Architecture on AWS
 
-[![CI - API](https://github.com/thejondaw/devops-project/actions/workflows/ci-api.yaml/badge.svg)](https://github.com/thejondaw/devops-project/actions/workflows/ci-api.yaml)
-[![CI - Web](https://github.com/thejondaw/devops-project/actions/workflows/ci-web.yaml/badge.svg)](https://github.com/thejondaw/devops-project/actions/workflows/ci-web.yaml)
+[![CI - Backend](https://github.com/thejondaw/devops-project/actions/workflows/ci-backend.yaml/badge.svg)](https://github.com/thejondaw/devops-project/actions/workflows/ci-backend.yaml)
+[![CI - Frontend](https://github.com/thejondaw/devops-project/actions/workflows/ci-frontend.yaml/badge.svg)](https://github.com/thejondaw/devops-project/actions/workflows/ci-frontend.yaml)
 [![CD - Infrastructure](https://github.com/thejondaw/devops-project/actions/workflows/cd-infrastructure.yaml/badge.svg)](https://github.com/thejondaw/devops-project/actions/workflows/cd-infrastructure.yaml)
-[![CD - Post Install](https://github.com/thejondaw/devops-project/actions/workflows/post-install.yaml/badge.svg)](https://github.com/thejondaw/devops-project/actions/workflows/post-install.yaml)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=thejondaw_devops-project&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=thejondaw_devops-project)
+[![CD - Applications](https://github.com/thejondaw/devops-project/actions/workflows/cd-applications.yaml/badge.svg)](https://github.com/thejondaw/devops-project/actions/workflows/cd-applications.yaml)
 
-Production-ready implementation of a three-tier architecture leveraging modern DevOps practices, Infrastructure as Code, and GitOps methodologies.
+CI/CD implementation of a three-tier architecture leveraging modern DevOps practices, Infrastructure as Code, and GitOps methodologies.
 
 ## 🏛️ Application Architecture
 
@@ -85,7 +84,7 @@ This project demonstrates a comprehensive CI/CD approach following enterprise be
 
 ### 🔨 Continuous Integration (CI) Pipeline
 
-Our CI process ensures code quality and security before containerization:
+This CI process ensures code quality and security before containerization:
 
 ```mermaid
 graph LR
@@ -101,7 +100,7 @@ graph LR
    - ESLint (`.eslintrc`) validates code style
    - Prettier enforces consistent formatting
    - SonarQube performs deep code analysis
-   - Unit & integration test coverage
+   - Unit & Integration test coverage
 
 2. **Security Validation**
    - Dependencies audit
@@ -117,7 +116,7 @@ graph LR
 
 ### 🚀 Continuous Delivery/Deployment (CD) Pipeline
 
-Our CD implementation consists of three major phases:
+This CD implementation consists of three major phases:
 
 ```mermaid
 graph TD
@@ -148,61 +147,22 @@ graph TD
    - VPC with isolated subnets
    - EKS cluster configuration
    - Aurora PostgreSQL (Serverless v2)
-   - IAM & security policies
+   - IAM & security Policies
 
 2. **Platform Tools**
    - GitOps with ArgoCD
-   - Monitoring (Prometheus/Grafana)
-   - Logging (Loki/Promtail)
+   - Monitoring (Prometheus + Grafana)
+   - Logging (Loki + Promtail)
+   - Network (Falco)
    - Secrets (Vault)
    - Ingress (NGINX)
+   - Snapshots (Velero)
 
 3. **Application Deployment**
    - Declarative configs in Git
    - Automatic sync via ArgoCD
    - Zero-touch deployment
    - Automated rollbacks
-
-<div align="center">
-  <img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png">
-</div>
-
-## 🛡️ Known Security Trade-offs
-
-The following security checks are intentionally skipped for development purposes:
-
-### 🌍 Network & Access
-- **Public EKS Access** *(CKV_AWS_38, CKV_AWS_39)*
- - EKS endpoint is publicly accessible for development convenience
- - Production should restrict access to specific IP ranges
-
-- **Auto-assign Public IPs** *(CKV_AWS_130)*
- - Subnets auto-assign public IPs for EKS worker nodes access
- - Production should use NAT Gateway + private subnets
-
-- **Open Security Groups**
-  - Security groups allow inbound traffic from 0.0.0.0/0
-  - In production should be restricted to corporate IPs/VPN ranges
-  - Trade-off: Easier development vs Security best practices
-
-### 💾 Database & Backups
-- **RDS Security Settings** *(CKV_AWS_162, CKV_AWS_313, CKV_AWS_139)*
- - IAM authentication disabled
- - Deletion protection disabled
- - Using default backup strategy (14 days retention)
-
-### 📝 Logging & State
-- **Short Log Retention** *(CKV_AWS_338)*
- - CloudWatch logs kept for 7-30 days instead of 1 year
- - Reduced costs for non-production environments
-
-- **State File Locking** *(CKV_TF_3)*
- - Terraform state locks disabled
- - Single developer environment doesn't require state locking
-
-### Reference
-- [PrismaCloud Security Policies](https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/)
-- [AWS Security Best Practices](https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/welcome.html)
 
 <div align="center">
   <img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png">
@@ -239,8 +199,6 @@ The following security checks are intentionally skipped for development purposes
 ### 🚀 Applications
 - [ ] API service deployment
 - [ ] Web UI deployment
-- [ ] Integration testing
-- [ ] Production readiness
 
 ## 📁 Project Structure
 
@@ -256,28 +214,6 @@ devops-pet-project/
 │   └── environments/           # Environment configurations
 ├── k8s/                        # Kubernetes resources & ArgoCD
 └── scripts/                    # Automation utilities
-```
-
-## 🚀 Quick Start Guide
-
-1. **Clone & Configure**
-```bash
-git clone https://github.com/thejondaw/devops-pet-project.git
-cd devops-pet-project
-cp terraform/environments/example.tfvars terraform/environments/prod/terraform.tfvars
-```
-
-2. **Infrastructure Deployment**
-```bash
-make setup
-make init
-make plan
-make apply
-```
-
-3. **Post-Installation**
-```bash
-make post-install
 ```
 
 ## 🛠️ Environment Configuration

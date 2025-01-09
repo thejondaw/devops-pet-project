@@ -7,7 +7,8 @@ A comprehensive guide for post-installation setup and access configuration for t
 ### EKS Cluster Access
 ```bash
 # Get cluster name and update kubeconfig (fish shell)
-set CLUSTER_NAME (aws eks list-clusters --region us-east-2 --query "clusters[?contains(@, 'develop')]|[0]" --output text)
+set ENVIRONMENT "master"
+set CLUSTER_NAME (aws eks list-clusters --region us-east-2 --query "clusters[?contains(@, '$ENVIRONMENT')]|[0]" --output text)
 aws eks update-kubeconfig --name $CLUSTER_NAME --region us-east-2
 ```
 

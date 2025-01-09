@@ -50,5 +50,5 @@ variable "vpc_configuration" {
 variable "cluster_name" {
   description = "Name of the EKS cluster for subnet discovery tags"
   type        = string
-  default     = "" # Пустая строка если кластер еще не создан
+  default     = ""
 }
