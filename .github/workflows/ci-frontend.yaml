@@ -151,10 +151,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Install cosign for image signing
-      - name: Install cosign
-        uses: sigstore/cosign-installer@main
-
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
@@ -165,13 +161,6 @@ jobs:
             ${{ env.DOCKER_REPO }}:${{ github.ref == 'refs/heads/master' && 'latest' || github.ref == 'refs/heads/stage' && 'stage' || 'develop' }}
           cache-from: type=registry,ref=${{ env.DOCKER_REPO }}:buildcache
           cache-to: type=registry,ref=${{ env.DOCKER_REPO }}:buildcache,mode=max
-
-      # Sign the container image
-      - name: Sign container image
-        run: |
-          cosign sign --key env://COSIGN_PRIVATE_KEY ${DOCKER_REPO}:${GITHUB_SHA}
-        env:
-          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
 
   trivy:
     needs: build
