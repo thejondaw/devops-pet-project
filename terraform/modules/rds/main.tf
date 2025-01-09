@@ -61,7 +61,7 @@ resource "aws_db_instance" "postgresql" {
 
   # Engine configuration
   engine         = "postgres"
-  engine_version = "15.3"
+  engine_version = "15.4"
   instance_class = "db.t4g.micro"
 
   # Storage configuration
