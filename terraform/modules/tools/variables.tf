@@ -9,9 +9,9 @@ variable "environment" {
   description = "Environment name (develop, stage, master)"
   type        = string
   validation {
-    condition = contains(["develop", "stage", "master"], var.environment)
+    condition     = contains(["develop", "stage", "master"], var.environment)
     error_message = "Environment must be develop, stage, or master."
-}
+  }
 }
 
 # Service configuration variable
