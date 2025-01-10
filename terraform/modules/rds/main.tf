@@ -34,7 +34,7 @@ data "aws_subnet" "db" {
 
 # Parameter group for PostgreSQL logging
 resource "aws_db_parameter_group" "postgresql" {
-  family = "postgres17"  # Changed to match PostgreSQL 17
+  family = "postgres17" # Changed to match PostgreSQL 17
   name   = "${var.environment}-postgres-params"
 
   parameter {
@@ -66,7 +66,7 @@ resource "aws_db_instance" "postgresql" {
 
   # Storage configuration
   allocated_storage     = 20
-  storage_type         = "gp2"
+  storage_type          = "gp2"
   max_allocated_storage = 0
 
   # Database settings
@@ -79,17 +79,17 @@ resource "aws_db_instance" "postgresql" {
   db_subnet_group_name   = aws_db_subnet_group.postgresql_subnet_group.name
   vpc_security_group_ids = [aws_security_group.sg_postgresql.id]
   publicly_accessible    = false
-  multi_az              = false
-  network_type          = "IPV4"
+  multi_az               = false
+  network_type           = "IPV4"
 
   # Backup settings
   backup_retention_period = 1
-  backup_window          = "03:00-04:00"
-  maintenance_window     = "Mon:04:00-Mon:05:00"
+  backup_window           = "03:00-04:00"
+  maintenance_window      = "Mon:04:00-Mon:05:00"
 
   # Additional features
   performance_insights_enabled = false
-  monitoring_interval         = 0
+  monitoring_interval          = 0
 
   # Version management
   auto_minor_version_upgrade  = true
@@ -97,7 +97,7 @@ resource "aws_db_instance" "postgresql" {
 
   # Protection settings
   deletion_protection      = false
-  skip_final_snapshot     = true
+  skip_final_snapshot      = true
   delete_automated_backups = true
 
   # Parameters
