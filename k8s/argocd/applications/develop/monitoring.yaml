@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/thejondaw/devops-pet-project.git
     path: helm/charts/monitoring
-    targetRevision: app
+    targetRevision: develop
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
