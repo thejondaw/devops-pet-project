@@ -96,15 +96,15 @@ log "Deploying Metrics Server..."
 kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/metrics-server.yaml
 wait_for_deployment "kube-system" "app.kubernetes.io/name=metrics-server" 300
 
-# AWS EBS CSI Driver
-log "Deploying AWS EBS CSI Driver..."
-kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/aws-ebs-csi-driver.yaml
-wait_for_deployment "kube-system" "app.kubernetes.io/name=aws-ebs-csi-driver" 300
-
 # Ingress Nginx
 log "Deploying Ingress Nginx..."
 kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/ingress-nginx.yaml
 wait_for_deployment "ingress-nginx" "app.kubernetes.io/name=ingress-nginx" 300
+
+# AWS EBS CSI Driver
+log "Deploying AWS EBS CSI Driver..."
+kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/aws-ebs-csi-driver.yaml
+wait_for_deployment "kube-system" "app.kubernetes.io/name=aws-ebs-csi-driver" 300
 
 # Monitoring
 log "Deploying monitoring stack..."
