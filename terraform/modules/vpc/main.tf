@@ -17,7 +17,6 @@ resource "aws_vpc" "main" {
 resource "aws_subnet" "subnet_web" {
   vpc_id     = aws_vpc.main.id
   cidr_block = var.vpc_configuration.subnets.web.cidr_block
-
   map_public_ip_on_launch = true
   availability_zone       = var.vpc_configuration.subnets.web.az
 
@@ -210,6 +209,14 @@ resource "aws_security_group" "sec_group_vpc" {
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = [var.vpc_configuration.cidr]
+  }
+
+  ingress {
+    description = "ArgoCD Web UI"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
