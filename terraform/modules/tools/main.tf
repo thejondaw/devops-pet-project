@@ -38,7 +38,7 @@ resource "helm_release" "argocd" {
       config:
         repositories: |
           - type: git
-            url: https://github.com/thejondaw/devops-project.git
+            url: https://github.com/thejondaw/devops-pet-project.git
             name: infrastructure
 
     controller:

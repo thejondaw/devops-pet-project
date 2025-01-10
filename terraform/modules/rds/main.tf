@@ -2,7 +2,7 @@
 data "aws_vpc" "main" {
   filter {
     name   = "tag:Name"
-    values = ["devops-project-vpc"]
+    values = ["devops-pet-project-vpc"]
   }
 }
 
@@ -106,7 +106,7 @@ resource "aws_db_instance" "postgresql" {
   tags = {
     Name        = "${var.environment}-postgres"
     Environment = var.environment
-    Project     = "devops-project"
+    Project     = "devops-pet-project"
     ManagedBy   = "terraform"
     Engine      = "postgresql"
   }
@@ -120,9 +120,9 @@ resource "aws_db_subnet_group" "postgresql_subnet_group" {
   subnet_ids = [data.aws_subnet.api.id, data.aws_subnet.db.id]
 
   tags = {
-    Name        = "devops-project-postgres-subnet-group"
+    Name        = "devops-pet-project-postgres-subnet-group"
     Environment = var.environment
-    Project     = "devops-project"
+    Project     = "devops-pet-project"
     ManagedBy   = "terraform"
   }
 }
@@ -152,9 +152,9 @@ resource "aws_security_group" "sg_postgresql" {
   }
 
   tags = {
-    Name        = "devops-project-postgres-sg"
+    Name        = "devops-pet-project-postgres-sg"
     Environment = var.environment
-    Project     = "devops-project"
+    Project     = "devops-pet-project"
     ManagedBy   = "terraform"
     Type        = "database-security"
   }

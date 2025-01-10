@@ -9,7 +9,7 @@ locals {
   common_tags = {
     Environment = var.environment
     ManagedBy   = "terra-m"
-    Project     = "devops-project"
+    Project     = "devops-pet-project"
     CreatedAt   = time_static.cluster_timestamp.rfc3339
     Owner       = "DevOps"
     Service     = "EKS"
@@ -41,7 +41,7 @@ locals {
 data "aws_vpc" "main" {
   filter {
     name   = "tag:Name"
-    values = ["devops-project-vpc"]
+    values = ["devops-pet-project-vpc"]
   }
 }
 

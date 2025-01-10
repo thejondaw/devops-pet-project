@@ -4,9 +4,9 @@ resource "aws_vpc" "main" {
   instance_tenancy = "default"
 
   tags = {
-    Name        = "devops-project-vpc"
+    Name        = "devops-pet-project-vpc"
     Environment = var.environment
-    Project     = "devops-project"
+    Project     = "devops-pet-project"
     ManagedBy   = "terraform"
   }
 }
@@ -24,7 +24,7 @@ resource "aws_subnet" "subnet_web" {
   tags = {
     Name        = "subnet-web"
     Environment = var.environment
-    Project     = "devops-project"
+    Project     = "devops-pet-project"
     ManagedBy   = "terraform"
     Type        = "public"
     Tier        = "web"
@@ -44,7 +44,7 @@ resource "aws_subnet" "subnet_alb" {
   tags = {
     Name        = "subnet-alb"
     Environment = var.environment
-    Project     = "devops-project"
+    Project     = "devops-pet-project"
     ManagedBy   = "terraform"
     Type        = "public"
     Tier        = "alb"
@@ -62,7 +62,7 @@ resource "aws_subnet" "subnet_api" {
   tags = {
     Name        = "subnet-api"
     Environment = var.environment
-    Project     = "devops-project"
+    Project     = "devops-pet-project"
     ManagedBy   = "terraform"
     Type        = "private"
     Tier        = "api"
@@ -78,7 +78,7 @@ resource "aws_subnet" "subnet_db" {
   tags = {
     Name        = "subnet-db"
     Environment = var.environment
-    Project     = "devops-project"
+    Project     = "devops-pet-project"
     ManagedBy   = "terraform"
     Type        = "private"
     Tier        = "database"
@@ -92,9 +92,9 @@ resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name        = "devops-project-igw"
+    Name        = "devops-pet-project-igw"
     Environment = var.environment
-    Project     = "devops-project"
+    Project     = "devops-pet-project"
     ManagedBy   = "terraform"
   }
 }
@@ -109,9 +109,9 @@ resource "aws_route_table" "public_rt" {
   }
 
   tags = {
-    Name        = "devops-project-public-rt"
+    Name        = "devops-pet-project-public-rt"
     Environment = var.environment
-    Project     = "devops-project"
+    Project     = "devops-pet-project"
     ManagedBy   = "terraform"
     Type        = "public"
   }
@@ -141,9 +141,9 @@ resource "aws_nat_gateway" "ngw" {
   subnet_id     = aws_subnet.subnet_web.id
 
   tags = {
-    Name        = "devops-project-nat"
+    Name        = "devops-pet-project-nat"
     Environment = var.environment
-    Project     = "devops-project"
+    Project     = "devops-pet-project"
     ManagedBy   = "terraform"
   }
 }
@@ -153,9 +153,9 @@ resource "aws_route_table" "private_rt" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name        = "devops-project-private-rt"
+    Name        = "devops-pet-project-private-rt"
     Environment = var.environment
-    Project     = "devops-project"
+    Project     = "devops-pet-project"
     ManagedBy   = "terraform"
     Type        = "private"
   }
@@ -221,9 +221,9 @@ resource "aws_security_group" "sec_group_vpc" {
   }
 
   tags = {
-    Name        = "devops-project-vpc-sg"
+    Name        = "devops-pet-project-vpc-sg"
     Environment = var.environment
-    Project     = "devops-project"
+    Project     = "devops-pet-project"
     ManagedBy   = "terraform"
     Type        = "vpc-security"
   }

@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/thejondaw/devops-project.git
+    repoURL: https://github.com/thejondaw/devops-pet-project.git
     path: helm/charts/ingress-nginx
     targetRevision: app
   destination:

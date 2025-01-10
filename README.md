@@ -1,9 +1,9 @@
 # 🏗️ Enterprise-Grade Three-Tier Architecture on AWS
 
-[![CI - Backend](https://github.com/thejondaw/devops-project/actions/workflows/ci-backend.yaml/badge.svg)](https://github.com/thejondaw/devops-project/actions/workflows/ci-backend.yaml)
-[![CI - Frontend](https://github.com/thejondaw/devops-project/actions/workflows/ci-frontend.yaml/badge.svg)](https://github.com/thejondaw/devops-project/actions/workflows/ci-frontend.yaml)
-[![CD - Infrastructure](https://github.com/thejondaw/devops-project/actions/workflows/cd-infrastructure.yaml/badge.svg)](https://github.com/thejondaw/devops-project/actions/workflows/cd-infrastructure.yaml)
-[![CD - Applications](https://github.com/thejondaw/devops-project/actions/workflows/cd-applications.yaml/badge.svg)](https://github.com/thejondaw/devops-project/actions/workflows/cd-applications.yaml)
+[![CI - Backend](https://github.com/thejondaw/devops-pet-project/actions/workflows/ci-backend.yaml/badge.svg)](https://github.com/thejondaw/devops-pet-project/actions/workflows/ci-backend.yaml)
+[![CI - Frontend](https://github.com/thejondaw/devops-pet-project/actions/workflows/ci-frontend.yaml/badge.svg)](https://github.com/thejondaw/devops-pet-project/actions/workflows/ci-frontend.yaml)
+[![CD - Infrastructure](https://github.com/thejondaw/devops-pet-project/actions/workflows/cd-infrastructure.yaml/badge.svg)](https://github.com/thejondaw/devops-pet-project/actions/workflows/cd-infrastructure.yaml)
+[![CD - Applications](https://github.com/thejondaw/devops-pet-project/actions/workflows/cd-applications.yaml/badge.svg)](https://github.com/thejondaw/devops-pet-project/actions/workflows/cd-applications.yaml)
 
 CI/CD implementation of a three-tier architecture leveraging modern DevOps practices, Infrastructure as Code, and GitOps methodologies.
 
