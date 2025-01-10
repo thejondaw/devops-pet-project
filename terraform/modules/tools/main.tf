@@ -6,61 +6,55 @@ resource "helm_release" "argocd" {
   repository       = "https://argoproj.github.io/argo-helm"
   chart            = "argo-cd"
   version          = "5.51.6"
-  namespace        = "argocd"
-  create_namespace = true
 
   values = [<<-EOF
+    global:
+      image:
+        imagePullPolicy: Always
+
     server:
       extraArgs:
         - --insecure
       service:
-        type: ${var.argocd_server_service.type}
+        type: LoadBalancer
         annotations:
-          service.beta.kubernetes.io/aws-load-balancer-type: "${var.argocd_server_service.load_balancer_type}"
-          service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "${var.argocd_server_service.cross_zone_enabled}"
-          service.beta.kubernetes.io/aws-load-balancer-scheme: "${var.argocd_server_service.load_balancer_scheme}"
-          service.beta.kubernetes.io/aws-load-balancer-name: "argocd-${var.environment}-lb"
-        labels:
-          app: argocd
-          managedBy: terraform
-          service: argocd
-          component: server
-          environment: ${var.environment}
-        loadBalancerSourceRanges: ${jsonencode(var.argocd_server_service.source_ranges)}
+          service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+          service.beta.kubernetes.io/aws-load-balancer-internal: "false"
+          service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+          # Добавил explicit ports
+        ports:
+          - name: http
+            port: 80
+            targetPort: 8080
+          - name: https
+            port: 443
+            targetPort: 8080
 
-      rbac:
-        config:
-          policy.csv: |
-            p, role:org-admin, applications, *, */*, allow
-            p, role:org-admin, clusters, get, *, allow
-            p, role:org-admin, projects, get, *, allow
-
+      # Важная хуйня для безопасности
       config:
-        repositories: |
-          - type: git
-            url: https://github.com/thejondaw/devops-pet-project.git
-            name: infrastructure
+        url: https://argocd.your-domain.com  # Замени на свой домен
+        admin.enabled: "true"
+        application.instanceLabelKey: argocd.argoproj.io/instance
 
-    controller:
-      replicas: 1
-      resources:
-        limits:
-          cpu: 200m
-          memory: 256Mi
-        requests:
-          cpu: 100m
-          memory: 128Mi
-
+    # Redis configuration
     redis:
-      resources:
-        limits:
-          cpu: 100m
-          memory: 128Mi
-        requests:
-          cpu: 50m
-          memory: 64Mi
+      enabled: true
+
+    # Repo server configuration
+    repoServer:
+      serviceAccount:
+        create: true
+
+    # Application controller
+    controller:
+      serviceAccount:
+        create: true
   EOF
   ]
+
+  # Добавляем тайм-аут для деплоя
+  timeout = 800
+  wait    = true
 }
 
 # ========== HashiCorp Vault ========== #
