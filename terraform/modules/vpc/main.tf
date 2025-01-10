@@ -15,8 +15,8 @@ resource "aws_vpc" "main" {
 
 # Public Subnet #1 - WEB
 resource "aws_subnet" "subnet_web" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = var.vpc_configuration.subnets.web.cidr_block
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = var.vpc_configuration.subnets.web.cidr_block
   map_public_ip_on_launch = true
   availability_zone       = var.vpc_configuration.subnets.web.az
 
