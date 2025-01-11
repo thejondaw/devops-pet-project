@@ -2,28 +2,26 @@
 
 # ArgoCD - Helm
 resource "helm_release" "argocd" {
-  name       = "argocd"
-  repository = "https://argoproj.github.io/argo-helm"
-  chart      = "argo-cd"
-  version    = "5.51.6"
+  name             = "argocd"
+  repository       = "https://argoproj.github.io/argo-helm"
+  chart            = "argo-cd"
+  version          = "5.51.6"
+  namespace        = "argocd"
+  create_namespace = true
 
   values = [<<-EOF
-  server:
-    extraArgs:
-      - --insecure
-    service:
-      type: ${var.argocd_server_service.type}  # Вот тут var. добавить
-      annotations:
-        service.beta.kubernetes.io/aws-load-balancer-type: "${var.argocd_server_service.load_balancer_type}"  # И тут
-        service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "${var.argocd_server_service.cross_zone_enabled}"  # И тут
-        service.beta.kubernetes.io/aws-load-balancer-scheme: "${var.argocd_server_service.load_balancer_scheme}"  # И везде блять
-      loadBalancerSourceRanges: ${jsonencode(var.argocd_server_service.source_ranges)}
-EOF
-]
-
-  # Добавляем тайм-аут для деплоя
-  timeout = 800
-  wait    = true
+    server:
+      extraArgs:
+        - --insecure
+      service:
+        type: ${var.argocd_server_service.type}  # Вот тут var. добавить
+        annotations:
+          service.beta.kubernetes.io/aws-load-balancer-type: "${var.argocd_server_service.load_balancer_type}"  # И тут
+          service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "${var.argocd_server_service.cross_zone_enabled}"  # И тут
+          service.beta.kubernetes.io/aws-load-balancer-scheme: "${var.argocd_server_service.load_balancer_scheme}"  # И везде блять
+        loadBalancerSourceRanges: ${jsonencode(var.argocd_server_service.source_ranges)}
+  EOF
+  ]
 }
 
 # ========== HashiCorp Vault ========== #
