@@ -10,35 +10,23 @@ resource "helm_release" "argocd" {
   create_namespace = true
 
   values = [<<-EOF
-    global:
-      image:
-        imagePullPolicy: Always
-
     server:
       extraArgs:
         - --insecure
       service:
-        type: LoadBalancer
+        type: ${var.argocd_server_service.type}
         annotations:
-          service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-          service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
-          service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+          service.beta.kubernetes.io/aws-load-balancer-type: "${var.argocd_server_service.load_balancer_type}"
+          service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "${var.argocd_server_service.cross_zone_enabled}"
+          service.beta.kubernetes.io/aws-load-balancer-scheme: "${var.argocd_server_service.load_balancer_scheme}"
           service.beta.kubernetes.io/aws-load-balancer-name: "argocd-${var.environment}-lb"
-        ports:
-          - name: http
-            port: 80
-            targetPort: 8080
-            protocol: TCP
-          - name: https
-            port: 443
-            targetPort: 8080
-            protocol: TCP
         labels:
           app: argocd
           managedBy: terraform
           service: argocd
           component: server
           environment: ${var.environment}
+        loadBalancerSourceRanges: ${jsonencode(var.argocd_server_service.source_ranges)}
 
       rbac:
         config:
@@ -73,10 +61,6 @@ resource "helm_release" "argocd" {
           memory: 64Mi
   EOF
   ]
-
-  # Увеличиваем timeout на случай если AWS будет тупить с созданием NLB
-  timeout = 800
-  wait    = true
 }
 
 # ========== HashiCorp Vault ========== #

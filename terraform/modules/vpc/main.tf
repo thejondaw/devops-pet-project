@@ -27,7 +27,6 @@ resource "aws_subnet" "subnet_web" {
     ManagedBy   = "terraform"
     Type        = "public"
     Tier        = "web"
-    # Adding required tags for EKS
     "kubernetes.io/role/elb"                    = "1"
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
   }
@@ -47,7 +46,6 @@ resource "aws_subnet" "subnet_alb" {
     ManagedBy   = "terraform"
     Type        = "public"
     Tier        = "alb"
-    # Required tag for ALB auto-discovery
     "kubernetes.io/role/elb" = "1"
   }
 }
@@ -215,6 +213,14 @@ resource "aws_security_group" "sec_group_vpc" {
     description = "ArgoCD Web UI"
     from_port   = 8080
     to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "ArgoCD HTTPS"
+    from_port   = 8443
+    to_port     = 8443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
