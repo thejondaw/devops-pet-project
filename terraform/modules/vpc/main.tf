@@ -21,12 +21,12 @@ resource "aws_subnet" "subnet_web" {
   availability_zone       = var.vpc_configuration.subnets.web.az
 
   tags = {
-    Name        = "subnet-web"
-    Environment = var.environment
-    Project     = "devops-pet-project"
-    ManagedBy   = "terraform"
-    Type        = "public"
-    Tier        = "web"
+    Name                                        = "subnet-web"
+    Environment                                 = var.environment
+    Project                                     = "devops-pet-project"
+    ManagedBy                                   = "terraform"
+    Type                                        = "public"
+    Tier                                        = "web"
     "kubernetes.io/role/elb"                    = "1"
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
   }
@@ -40,12 +40,12 @@ resource "aws_subnet" "subnet_alb" {
   availability_zone       = var.vpc_configuration.subnets.alb.az
 
   tags = {
-    Name        = "subnet-alb"
-    Environment = var.environment
-    Project     = "devops-pet-project"
-    ManagedBy   = "terraform"
-    Type        = "public"
-    Tier        = "alb"
+    Name                     = "subnet-alb"
+    Environment              = var.environment
+    Project                  = "devops-pet-project"
+    ManagedBy                = "terraform"
+    Type                     = "public"
+    Tier                     = "alb"
     "kubernetes.io/role/elb" = "1"
   }
 }
