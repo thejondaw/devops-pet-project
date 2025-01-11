@@ -10,20 +10,71 @@ resource "helm_release" "argocd" {
   create_namespace = true
 
   values = [<<-EOF
-  server:
-    extraArgs:
-      - --insecure
-    service:
-      type: ${var.argocd_server_service.type}  # Вот тут var. добавить
-      annotations:
-        service.beta.kubernetes.io/aws-load-balancer-type: "${var.argocd_server_service.load_balancer_type}"  # И тут
-        service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "${var.argocd_server_service.cross_zone_enabled}"  # И тут
-        service.beta.kubernetes.io/aws-load-balancer-scheme: "${var.argocd_server_service.load_balancer_scheme}"  # И везде блять
-      loadBalancerSourceRanges: ${jsonencode(var.argocd_server_service.source_ranges)}
-EOF
-]
+    global:
+      image:
+        imagePullPolicy: Always
 
-  # Добавляем тайм-аут для деплоя
+    server:
+      extraArgs:
+        - --insecure
+      service:
+        type: LoadBalancer
+        annotations:
+          service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+          service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+          service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+          service.beta.kubernetes.io/aws-load-balancer-name: "argocd-${var.environment}-lb"
+        ports:
+          - name: http
+            port: 80
+            targetPort: 8080
+            protocol: TCP
+          - name: https
+            port: 443
+            targetPort: 8080
+            protocol: TCP
+        labels:
+          app: argocd
+          managedBy: terraform
+          service: argocd
+          component: server
+          environment: ${var.environment}
+
+      rbac:
+        config:
+          policy.csv: |
+            p, role:org-admin, applications, *, */*, allow
+            p, role:org-admin, clusters, get, *, allow
+            p, role:org-admin, projects, get, *, allow
+
+      config:
+        repositories: |
+          - type: git
+            url: https://github.com/thejondaw/devops-pet-project.git
+            name: infrastructure
+
+    controller:
+      replicas: 1
+      resources:
+        limits:
+          cpu: 200m
+          memory: 256Mi
+        requests:
+          cpu: 100m
+          memory: 128Mi
+
+    redis:
+      resources:
+        limits:
+          cpu: 100m
+          memory: 128Mi
+        requests:
+          cpu: 50m
+          memory: 64Mi
+  EOF
+  ]
+
+  # Увеличиваем timeout на случай если AWS будет тупить с созданием NLB
   timeout = 800
   wait    = true
 }
