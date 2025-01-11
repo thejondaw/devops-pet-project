@@ -8,49 +8,18 @@ resource "helm_release" "argocd" {
   version          = "5.51.6"
 
   values = [<<-EOF
-    global:
-      image:
-        imagePullPolicy: Always
-
-    server:
-      extraArgs:
-        - --insecure
-      service:
-        type: LoadBalancer
-        annotations:
-          service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-          service.beta.kubernetes.io/aws-load-balancer-internal: "false"
-          service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
-          # Добавил explicit ports
-        ports:
-          - name: http
-            port: 80
-            targetPort: 8080
-          - name: https
-            port: 443
-            targetPort: 8080
-
-      # Важная хуйня для безопасности
-      config:
-        url: https://argocd.your-domain.com  # Замени на свой домен
-        admin.enabled: "true"
-        application.instanceLabelKey: argocd.argoproj.io/instance
-
-    # Redis configuration
-    redis:
-      enabled: true
-
-    # Repo server configuration
-    repoServer:
-      serviceAccount:
-        create: true
-
-    # Application controller
-    controller:
-      serviceAccount:
-        create: true
-  EOF
-  ]
+  server:
+    extraArgs:
+      - --insecure
+    service:
+      type: ${var.argocd_server_service.type}  # Вот тут var. добавить
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-type: "${var.argocd_server_service.load_balancer_type}"  # И тут
+        service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "${var.argocd_server_service.cross_zone_enabled}"  # И тут
+        service.beta.kubernetes.io/aws-load-balancer-scheme: "${var.argocd_server_service.load_balancer_scheme}"  # И везде блять
+      loadBalancerSourceRanges: ${jsonencode(var.argocd_server_service.source_ranges)}
+EOF
+]
 
   # Добавляем тайм-аут для деплоя
   timeout = 800
