@@ -19,7 +19,7 @@ resource "helm_release" "argocd" {
         service.beta.kubernetes.io/aws-load-balancer-scheme: "${var.argocd_server_service.load_balancer_scheme}"  # И везде блять
       loadBalancerSourceRanges: ${jsonencode(var.argocd_server_service.source_ranges)}
 EOF
-]
+  ]
 
   # Добавляем тайм-аут для деплоя
   timeout = 800
