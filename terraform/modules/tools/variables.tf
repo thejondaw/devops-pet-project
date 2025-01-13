@@ -14,19 +14,6 @@ variable "environment" {
   }
 }
 
-# Service configuration variable
-variable "argocd_server_service" {
-  description = "ArgoCD server service configuration"
-  type = object({
-    type          = string
-    source_ranges = list(string)
-  })
-  default = {
-    type          = "LoadBalancer"
-    source_ranges = ["0.0.0.0/0"]
-  }
-}
-
 # Variable - ArgoCD Service
 variable "argocd_server_service" {
   description = "ArgoCD server service configuration"
