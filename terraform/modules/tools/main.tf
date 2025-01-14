@@ -1,6 +1,6 @@
 # =============== NGINX =============== #
 
-# Helm - Nginx
+# AWS Load Balancer setup through Nginx Ingress Controller
 resource "helm_release" "ingress_nginx" {
   name             = "ingress-nginx"
   repository       = "https://kubernetes.github.io/ingress-nginx"
@@ -11,7 +11,7 @@ resource "helm_release" "ingress_nginx" {
 
   values = [<<-EOF
     controller:
-      # Метрики для мониторинга
+      # Prometheus metrics configuration
       metrics:
         enabled: true
         service:
@@ -19,7 +19,7 @@ resource "helm_release" "ingress_nginx" {
             prometheus.io/scrape: "true"
             prometheus.io/port: "10254"
 
-      # Настройки NLB
+      # NLB configuration with AWS annotations
       service:
         enabled: true
         type: LoadBalancer
@@ -27,8 +27,9 @@ resource "helm_release" "ingress_nginx" {
           service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
           service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
           service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+          service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
 
-      # Ресурсы - минималка чтоб не жрать бабло
+      # Resource limits
       resources:
         requests:
           cpu: 25m
@@ -37,19 +38,31 @@ resource "helm_release" "ingress_nginx" {
           cpu: 50m
           memory: 96Mi
 
-      # Конфиг для правильных IP и хедеров
+      # Proxy configuration and real IP handling
       config:
         use-forwarded-headers: "true"
         use-proxy-protocol: "false"
         enable-real-ip: "true"
         proxy-real-ip-cidr: "0.0.0.0/0"
+
+      # Port configuration with proper mappings
+      containerPort:
+        http: 80
+        https: 443
+      service:
+        ports:
+          http: 80
+          https: 443
+        targetPorts:
+          http: http
+          https: https
     EOF
   ]
 }
 
 # ============== ArgoCD =============== #
 
-# ArgoCD - Helm
+# ArgoCD Installation and Configuration
 resource "helm_release" "argocd" {
   name             = "argocd"
   repository       = "https://argoproj.github.io/argo-helm"
@@ -67,13 +80,13 @@ resource "helm_release" "argocd" {
       extraArgs:
         - --insecure
 
-      # Базовый сервис - ClusterIP
+      # Service configuration with explicit port mapping
       service:
         type: ClusterIP
         port: 80
         targetPort: 8080
 
-      # Ингресс конфиг
+      # Ingress configuration with proper backend routing
       ingress:
         enabled: true
         ingressClassName: nginx
@@ -81,11 +94,18 @@ resource "helm_release" "argocd" {
           nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
           nginx.ingress.kubernetes.io/ssl-redirect: "false"
           nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+          nginx.ingress.kubernetes.io/proxy-body-size: "0"
         paths:
           - /
         pathType: Prefix
+        backend:
+          service:
+            name: argocd-server
+            port:
+              number: 80
+              targetPort: 8080
 
-      # Минимальные ресурсы
+      # Resource allocation
       resources:
         limits:
           cpu: 100m
@@ -94,6 +114,7 @@ resource "helm_release" "argocd" {
           cpu: 50m
           memory: 64Mi
 
+    # Redis configuration
     redis:
       resources:
         limits:
@@ -103,6 +124,7 @@ resource "helm_release" "argocd" {
           cpu: 50m
           memory: 64Mi
 
+    # Controller configuration
     controller:
       resources:
         limits:
@@ -111,6 +133,16 @@ resource "helm_release" "argocd" {
         requests:
           cpu: 100m
           memory: 128Mi
+
+    # RepoServer configuration for better stability
+    repoServer:
+      resources:
+        limits:
+          cpu: 100m
+          memory: 256Mi
+        requests:
+          cpu: 50m
+          memory: 128Mi
     EOF
   ]
 
@@ -118,9 +150,6 @@ resource "helm_release" "argocd" {
     helm_release.ingress_nginx
   ]
 }
-
-
-
 
 # resource "helm_release" "argocd" {
 #   name             = "argocd"
