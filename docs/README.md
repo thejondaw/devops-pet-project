@@ -13,6 +13,7 @@ aws eks update-kubeconfig --name $CLUSTER_NAME --region us-east-2
 ```
 
 ### ArgoCD Access
+
 ```bash
 # Get ArgoCD URL and initial credentials
 echo "URL:" && \
@@ -24,6 +25,7 @@ echo
 ```
 
 ### Grafana Setup
+
 ```bash
 # Get Grafana access details
 echo "URL:" && \

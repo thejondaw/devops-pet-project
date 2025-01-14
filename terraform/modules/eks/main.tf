@@ -94,7 +94,6 @@ resource "aws_iam_role_policy" "node_group_ebs" {
   role = aws_iam_role.node_group.id
 
   policy = jsonencode({
-    Version = "2012-10-17"
     Statement = [
       {
         Effect = "Allow"
@@ -104,27 +103,9 @@ resource "aws_iam_role_policy" "node_group_ebs" {
           "ec2:AttachVolume",
           "ec2:DetachVolume"
         ]
-        # Restriction by Region and Account
         Resource = [
           "arn:aws:ec2:${var.region}:${data.aws_caller_identity.current.account_id}:volume/*"
         ]
-        Condition = {
-          # For specific Taggs
-          StringEquals = {
-            "aws:RequestTag/Environment" : var.environment,
-            "aws:RequestTag/ManagedBy" : "terraform"
-          }
-        }
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "ec2:DescribeVolumes",
-          "ec2:DescribeSnapshots",
-          "ec2:DescribeTags"
-        ]
-
-        Resource = "*"
       }
     ]
   })
