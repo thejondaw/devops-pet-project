@@ -15,10 +15,12 @@ terraform {
   }
 }
 
-# Provider configuration using variables
+# Provider - AWS
 provider "aws" {
   region = var.region
 }
+
+# =================== DATA SOURCES =================== #
 
 # S3 Bucket - Terraform State
 data "aws_s3_bucket" "terraform_state" {

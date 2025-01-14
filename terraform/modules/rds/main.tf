@@ -1,37 +1,3 @@
-# Fetch - VPC
-data "aws_vpc" "main" {
-  filter {
-    name   = "tag:Name"
-    values = ["devops-pet-project-vpc"]
-  }
-}
-
-# Fetch - Subnet API
-data "aws_subnet" "api" {
-  filter {
-    name   = "tag:Name"
-    values = ["subnet-api"]
-  }
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.main.id]
-  }
-}
-
-# Fetch - Subnet DB
-data "aws_subnet" "db" {
-  filter {
-    name   = "tag:Name"
-    values = ["subnet-db"]
-  }
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.main.id]
-  }
-}
-
-# ===================== DATABASE ===================== #
-
 # Parameter group for PostgreSQL logging
 resource "aws_db_parameter_group" "postgresql" {
   family = "postgres17" # Changed to match PostgreSQL 17

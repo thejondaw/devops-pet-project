@@ -16,6 +16,7 @@ variable "environment" {
 
 # ============ EKS CLUSTER CONFIGURATION ============= #
 
+# Variable - EKS Configuration
 variable "eks_configuration" {
   description = "EKS cluster configuration"
   type = object({

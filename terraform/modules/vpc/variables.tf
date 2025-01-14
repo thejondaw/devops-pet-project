@@ -45,10 +45,3 @@ variable "vpc_configuration" {
     error_message = "Must be a valid IPv4 CIDR block."
   }
 }
-
-# Variable - Cluster Name
-variable "cluster_name" {
-  description = "Name of the EKS cluster for subnet discovery tags"
-  type        = string
-  default     = ""
-}

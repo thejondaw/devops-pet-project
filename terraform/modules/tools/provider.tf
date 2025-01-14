@@ -71,3 +71,6 @@ data "aws_eks_cluster" "cluster" {
     if can(regex("^${var.environment}-cluster-", cluster_name))
   ][0]
 }
+
+# Get current AWS account
+data "aws_caller_identity" "current" {}

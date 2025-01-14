@@ -21,14 +21,12 @@ resource "aws_subnet" "subnet_web" {
   availability_zone       = var.vpc_configuration.subnets.web.az
 
   tags = {
-    Name                                        = "subnet-web"
-    Environment                                 = var.environment
-    Project                                     = "devops-pet-project"
-    ManagedBy                                   = "terraform"
-    Type                                        = "public"
-    Tier                                        = "web"
-    "kubernetes.io/role/elb"                    = "1"
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    Name        = "subnet-web"
+    Environment = var.environment
+    Project     = "devops-pet-project"
+    ManagedBy   = "terraform"
+    Type        = "public"
+    Tier        = "web"
   }
 }
 
@@ -40,13 +38,12 @@ resource "aws_subnet" "subnet_alb" {
   availability_zone       = var.vpc_configuration.subnets.alb.az
 
   tags = {
-    Name                     = "subnet-alb"
-    Environment              = var.environment
-    Project                  = "devops-pet-project"
-    ManagedBy                = "terraform"
-    Type                     = "public"
-    Tier                     = "alb"
-    "kubernetes.io/role/elb" = "1"
+    Name        = "subnet-alb"
+    Environment = var.environment
+    Project     = "devops-pet-project"
+    ManagedBy   = "terraform"
+    Type        = "public"
+    Tier        = "alb"
   }
 }
 
@@ -207,22 +204,6 @@ resource "aws_security_group" "sec_group_vpc" {
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = [var.vpc_configuration.cidr]
-  }
-
-  ingress {
-    description = "ArgoCD Web UI"
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "ArgoCD HTTPS"
-    from_port   = 8443
-    to_port     = 8443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
