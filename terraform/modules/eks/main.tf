@@ -106,16 +106,15 @@ resource "aws_iam_role_policy" "node_group_ebs" {
           "ec2:ModifyVolume",
           "ec2:CreateSnapshot",
           "ec2:DeleteSnapshot",
-          "ec2:CreateTags",
-          "ec2:ModifyVolume"
+          "ec2:CreateTags"
         ]
         Resource = [
           "arn:aws:ec2:${var.region}:${data.aws_caller_identity.current.account_id}:volume/*",
-          "arn:aws:ec2:${var.region}:${data.aws_caller_identity.current.account_id}:snapshot/*"
+          "arn:aws:ec2:${var.region}:${data.aws_caller_identity.current.account_id}:snapshot/*",
+          "arn:aws:ec2:${var.region}:${data.aws_caller_identity.current.account_id}:instance/*" # Добавляем права на EC2 инстансы
         ]
       },
       {
-        # Add read permissions for EC2
         Effect = "Allow"
         Action = [
           "ec2:DescribeVolumes",
