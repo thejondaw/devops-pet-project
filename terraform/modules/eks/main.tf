@@ -88,12 +88,13 @@ resource "aws_iam_role" "node_group" {
   })
 }
 
-# Attach - EBS Policy - Node Group
+# Add proper IAM policy for EBS CSI Driver
 resource "aws_iam_role_policy" "node_group_ebs" {
   name = "ebs-policy"
   role = aws_iam_role.node_group.id
 
   policy = jsonencode({
+    Version = "2012-10-17"
     Statement = [
       {
         Effect = "Allow"
@@ -101,11 +102,29 @@ resource "aws_iam_role_policy" "node_group_ebs" {
           "ec2:CreateVolume",
           "ec2:DeleteVolume",
           "ec2:AttachVolume",
-          "ec2:DetachVolume"
+          "ec2:DetachVolume",
+          "ec2:ModifyVolume",
+          "ec2:CreateSnapshot",
+          "ec2:DeleteSnapshot",
+          "ec2:CreateTags",
+          "ec2:ModifyVolume"
         ]
         Resource = [
-          "arn:aws:ec2:${var.region}:${data.aws_caller_identity.current.account_id}:volume/*"
+          "arn:aws:ec2:${var.region}:${data.aws_caller_identity.current.account_id}:volume/*",
+          "arn:aws:ec2:${var.region}:${data.aws_caller_identity.current.account_id}:snapshot/*"
         ]
+      },
+      {
+        # Add read permissions for EC2
+        Effect = "Allow"
+        Action = [
+          "ec2:DescribeVolumes",
+          "ec2:DescribeVolumesModifications",
+          "ec2:DescribeSnapshots",
+          "ec2:DescribeTags",
+          "ec2:DescribeInstances"
+        ]
+        Resource = "*"
       }
     ]
   })

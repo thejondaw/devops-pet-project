@@ -19,7 +19,7 @@ handle_error() {
     log "Error occurred on line: ${BASH_LINENO[0]}"
     # Dump pod logs for debugging
     log "Dumping pods status across all namespaces..."
-    kubectl get pods -A -o wide >> "${LOG_FILE}"
+    kubectl get pods -A -o wide >>"${LOG_FILE}"
     exit "${exit_code}"
 }
 trap handle_error ERR
@@ -50,7 +50,7 @@ wait_for_deployment() {
 
     # First, wait for the ArgoCD app to become Healthy
     log "Waiting for ArgoCD app sync..."
-    sleep 30  # Give ArgoCD time to start the sync
+    sleep 30 # Give ArgoCD time to start the sync
 
     while [ $elapsed -lt $timeout ]; do
         if kubectl -n "${namespace}" get deployment -l "${label}" &>/dev/null; then
@@ -67,7 +67,7 @@ wait_for_deployment() {
         # Show current status
         if kubectl -n "${namespace}" get pods -l "${label}" &>/dev/null; then
             log "Current pod status:"
-            kubectl -n "${namespace}" get pods -l "${label}" -o wide >> "${LOG_FILE}"
+            kubectl -n "${namespace}" get pods -l "${label}" -o wide >>"${LOG_FILE}"
         fi
     done
 
