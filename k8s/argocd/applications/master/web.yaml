@@ -11,7 +11,7 @@ spec:
     targetRevision: master
     helm:
       valueFiles:
-        - ../../environments/app/values.yaml
+        - ../../environments/values.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: app

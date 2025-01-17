@@ -103,49 +103,6 @@ kubectl exec -it vault-0 -n vault -- vault kv put secret/database/rds \
 kubectl exec -it vault-0 -n vault -- vault kv get secret/database/rds
 ```
 
-## 🧹 Infrastructure Cleanup Scripts
-
-### Full Platform Cleanup
-```bash
-# Critical manual steps first!
-# 1. Delete Vault IAM Role manually
-# 2. Delete EC2 Volumes manually
-
-# Remove ArgoCD
-helm uninstall argocd -n argocd
-kubectl delete namespace argocd
-
-# Optional: Remove monitoring with cascade
-argocd app delete monitoring --cascade
-
-# Rebuild platform tools
-make apply-tools
-bash scripts/post-install.sh
-```
-
-### Namespace Cleanup Commands
-```bash
-# Development namespace
-kubectl delete all --all -n develop
-
-# Monitoring stack cleanup
-kubectl delete -f k8s/argocd/applications/develop/monitoring.yaml
-kubectl delete all --all -n monitoring
-kubectl delete cm --all -n monitoring
-kubectl delete secret --all -n monitoring
-kubectl delete serviceaccount --all -n monitoring
-kubectl delete rolebinding --all -n monitoring
-kubectl delete role --all -n monitoring
-kubectl delete pvc --all -n monitoring
-kubectl delete clusterrolebinding --selector=release=grafana-prometheus
-kubectl delete clusterrole --selector=release=grafana-prometheus
-kubectl delete ns monitoring
-
-# Other components
-kubectl delete all --all -n vault
-kubectl delete all --all -n ingress-nginx
-```
-
 ## 🛠️ Local Development Setup
 
 ### Helm Installation
@@ -184,13 +141,4 @@ alias kex="kubectl exec -it"
 alias kdesc="kubectl describe"
 alias ktp="kubectl top pod"
 alias ktn="kubectl top node"' >> ~/.bashrc && source ~/.bashrc
-```
-
-## 🚨 Known Issues & Workarounds
-
-### RDS Endpoint Configuration
-```bash
-# Get RDS endpoint (note: doesn't work with ArgoCD manifests)
-DB_ENDPOINT=$(aws rds describe-db-instances --query 'DBInstances[0].Endpoint.Address' --output text)
-kubectl patch configmap api-cm -n develop -p "{\"data\":{\"DB_HOST\":\"$DB_ENDPOINT\"}}"
 ```
