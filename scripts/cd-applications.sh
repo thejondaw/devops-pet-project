@@ -112,16 +112,16 @@ kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/monitoring.yaml
 wait_for_deployment "monitoring" "app.kubernetes.io/name=prometheus" 300
 wait_for_deployment "monitoring" "app.kubernetes.io/name=grafana" 300
 
+# Vault
+log "Deploying Vault..."
+kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/vault.yaml
+# wait_for_deployment "vault" "app.kubernetes.io/name=vault" 300
+
 # Applications
 log "Deploying applications..."
 kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/api.yaml
 # wait_for_deployment "app" "app.kubernetes.io/name=api" 300
 kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/web.yaml
 # wait_for_deployment "app" "app.kubernetes.io/name=web" 300
-
-# Vault
-log "Deploying Vault..."
-kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/vault.yaml
-# wait_for_deployment "vault" "app.kubernetes.io/name=vault" 300
 
 log "Deployment completed successfully! Logs saved to: ${LOG_FILE}"

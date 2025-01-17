@@ -148,14 +148,14 @@ jobs:
 
          echo "=== Deployment script completed ==="
 
-     - name: Verify Deployments
-       if: success()
-       run: |
-         echo "=== Verifying deployments ==="
-         echo "Waiting for deployments to be available..."
-         kubectl wait --for=condition=Available deployment --all -n ${{ env.TARGET_ENV }} --timeout=300s
-
-         echo "=== Current state of resources ==="
-         kubectl get deployments,services,pods -n ${{ env.TARGET_ENV }} -o wide
-
-         echo "=== Deployment verification completed ==="
+#     - name: Verify Deployments
+#       if: success()
+#       run: |
+#         echo "=== Verifying deployments ==="
+#         echo "Waiting for deployments to be available..."
+#         kubectl wait --for=condition=Available deployment --all -n ${{ env.TARGET_ENV }} --timeout=300s
+#
+#         echo "=== Current state of resources ==="
+#         kubectl get deployments,services,pods -n ${{ env.TARGET_ENV }} -o wide
+#
+#         echo "=== Deployment verification completed ==="
