@@ -11,7 +11,8 @@ spec:
     targetRevision: master
     helm:
       valueFiles:
-        - ../../helm/environments/master/values.yaml
+        - ../environments/values.yaml
+
   destination:
     server: https://kubernetes.default.svc
     namespace: vault
