@@ -13,13 +13,15 @@ spec:
     metadata:
       annotations:
         vault.hashicorp.com/agent-inject: "true"
-        vault.hashicorp.com/agent-inject-status: "update"
-        vault.hashicorp.com/role: {{ .Values.vault.role | quote }}
-        vault.hashicorp.com/agent-inject-secret-database: {{ .Values.vault.path | quote }}
+        vault.hashicorp.com/role: "api"
+        vault.hashicorp.com/agent-inject-secret-database: "secret/data/database"
         vault.hashicorp.com/agent-inject-template-database: |
-          {{`{{- with secret "aws/creds/rds-role" -}}
-          export DBUSER="{{ .Data.username }}"
-          export DBPASS="{{ .Data.password }}"
+          {{`{{- with secret "secret/data/database" -}}
+          export DBUSER="{{ .Data.data.username }}"
+          export DBPASS="{{ .Data.data.password }}"
+          export DBHOST="{{ .Data.data.host }}"
+          export DBPORT="{{ .Data.data.port }}"
+          export DB="{{ .Data.data.dbname }}"
           {{- end -}}`}}
       labels:
         {{- include "api.selectorLabels" . | nindent 8 }}
