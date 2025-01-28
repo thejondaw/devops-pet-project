@@ -111,7 +111,7 @@ resource "aws_iam_role_policy" "node_group_ebs" {
         Resource = [
           "arn:aws:ec2:${var.region}:${data.aws_caller_identity.current.account_id}:volume/*",
           "arn:aws:ec2:${var.region}:${data.aws_caller_identity.current.account_id}:snapshot/*",
-          "arn:aws:ec2:${var.region}:${data.aws_caller_identity.current.account_id}:instance/*" # Добавляем права на EC2 инстансы
+          "arn:aws:ec2:${var.region}:${data.aws_caller_identity.current.account_id}:instance/*"
         ]
       },
       {
