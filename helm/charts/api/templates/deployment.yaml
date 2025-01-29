@@ -31,10 +31,6 @@ spec:
       serviceAccountName: {{ .Release.Name }}-sa
       securityContext:
         fsGroup: 1000
-      volumes:
-        - name: vault-secrets
-          emptyDir:
-            medium: Memory
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -43,10 +39,6 @@ spec:
             - name: http
               containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
-          volumeMounts:
-            - name: vault-secrets
-              mountPath: /vault/secrets
-              readOnly: true
           env:
             - name: VAULT_CONFIG
               value: /vault/secrets/database
