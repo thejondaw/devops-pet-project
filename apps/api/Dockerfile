@@ -13,4 +13,4 @@ ENV PORT=3000 \
     DBPORT=5432
 USER node
 EXPOSE 3000
-CMD [ "node", "./src/bin/www" ]
+CMD ["node", "/usr/src/app/start"]
