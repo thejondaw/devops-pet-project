@@ -89,8 +89,7 @@ resource "aws_iam_role" "vault" {
         Condition = {
           StringEquals = {
             "${replace(data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer, "https://", "")}:sub" : [
-              "system:serviceaccount:vault:vault",
-              "system:serviceaccount:kube-system:ebs-csi-controller-sa"
+              "system:serviceaccount:vault:vault"
             ]
           }
         }
@@ -99,28 +98,15 @@ resource "aws_iam_role" "vault" {
   })
 }
 
-# IAM Policy for Vault secrets and EBS operations
-resource "aws_iam_role_policy" "vault_secrets" {
-  name = "${var.environment}-vault-secrets-policy"
+# IAM Policy - Vault secrets & EBS operations
+resource "aws_iam_role_policy" "vault_ebs" {
+  name = "${var.environment}-vault-ebs-policy"
   role = aws_iam_role.vault.id
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        # Restrict Secrets Manager access to specific environment paths
-        Effect = "Allow"
-        Action = [
-          "secretsmanager:GetSecretValue",
-          "secretsmanager:DescribeSecret"
-        ]
-        Resource = [
-          "arn:aws:secretsmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:${var.environment}/*",
-          "arn:aws:secretsmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:${var.environment}-*"
-        ]
-      },
-      {
-        # EBS operations limited by environment tag
         Effect = "Allow"
         Action = [
           "ec2:CreateSnapshot",
@@ -139,15 +125,10 @@ resource "aws_iam_role_policy" "vault_secrets" {
         }
       },
       {
-        # Read-only EC2 operations - safe to allow on all resources
         Effect = "Allow"
         Action = [
-          "ec2:DescribeAvailabilityZones",
-          "ec2:DescribeInstances",
-          "ec2:DescribeSnapshots",
-          "ec2:DescribeTags",
           "ec2:DescribeVolumes",
-          "ec2:DescribeVolumesModifications"
+          "ec2:DescribeSnapshots"
         ]
         Resource = "*"
       }

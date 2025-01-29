@@ -12,6 +12,8 @@ set CLUSTER_NAME (aws eks list-clusters --region us-east-2 --query "clusters[?co
 aws eks update-kubeconfig --name $CLUSTER_NAME --region us-east-2
 ```
 
+---
+
 ### ArgoCD Access
 
 ```bash
@@ -23,6 +25,8 @@ echo "Password:" && \
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d && \
 echo
 ```
+
+---
 
 ### Grafana Setup
 
@@ -59,7 +63,58 @@ echo
 - Node Exporter: https://grafana.com/grafana/dashboards/1860
 - Kubernetes: https://grafana.com/grafana/dashboards/315
 
+---
+
 ### 🔒 HashiCorp Vault Configuration
+
+#### Vault Initialization Commands
+
+```shell
+# Initialize Vault and get unsealing keys - CRITICAL: BACKUP THESE KEYS!
+kubectl exec -it vault-0 -n vault -- sh
+vault operator init
+
+# Unseal the vault with 3 different keys
+vault operator unseal KEY1
+vault operator unseal KEY2
+vault operator unseal KEY3
+
+# Authenticate with root token
+vault login ROOT_TOKEN
+
+# Enable KV2 secrets engine and create database credentials
+vault secrets enable -path=secret kv-v2
+
+# Get RDS endpoint from terraform output
+DB_ENDPOINT=$(terraform -chdir=terraform/modules/rds output -raw db_endpoint)
+
+# Update Vault secret
+vault kv put secret/database \
+    username="jondaw" \
+    password="password" \
+    host="${DB_ENDPOINT}" \
+    port="5432" \
+    dbname="devopsdb"
+
+# Configure Kubernetes authentication
+vault auth enable kubernetes
+vault write auth/kubernetes/config \
+    kubernetes_host="https://kubernetes.default.svc"
+
+# Create API access policy
+vault policy write api-policy - <<EOF
+path "secret/data/database" {
+  capabilities = ["read"]
+}
+EOF
+
+# Bind ServiceAccount to policy through Kubernetes role
+vault write auth/kubernetes/role/api \
+    bound_service_account_names=api-sa \
+    bound_service_account_namespaces=app \
+    policies=api-policy \
+    ttl=1h
+```
 
 ```bash
 # Port forwarding setup
@@ -67,41 +122,9 @@ kubectl port-forward service/vault 8200:8200 -n vault
 
 # Access URL
 http://localhost:8200
-
-# Initialize Vault
-kubectl exec -n vault vault-0 -- vault operator init
 ```
 
-#### Vault Unseal Process
-Store these keys securely - losing them means goodbye to your secrets! 🔑
-```plaintext
-Unseal Key 1: pCTZi4aO+rdGBaDX93G7dwiA5v4mpPe2Djy7mZbPtO+p
-Unseal Key 2: JAzAFgq4zagwAWluGVC18t/UxdKPVobF4oWjgJEbbDry
-Unseal Key 3: P+MIG/L+pitQwFrmsqQilXqt+fmOd4PkKjTUZEma/HPa
-Unseal Key 4: vLk5YR7ybb9Cz9gjJPo4LoOfqcIYfSCIuWG53jtY77jx
-Unseal Key 5: w4b14teHsZVyPEgJXyZWZ4J13EurYZXZ3x88D4lPhgtY
-
-Initial Root Token: <VAULT_TOKEN>
-```
-
-#### Vault Initialization Commands
-```bash
-# Unseal Vault (need 3 keys)
-kubectl exec -it vault-0 -n vault -- vault operator unseal ${KEY1}
-kubectl exec -it vault-0 -n vault -- vault operator unseal ${KEY2}
-kubectl exec -it vault-0 -n vault -- vault operator unseal ${KEY3}
-
-# Login and setup
-kubectl exec -it vault-0 -n vault -- vault login
-kubectl exec -it vault-0 -n vault -- vault secrets enable -path=secret kv-v2
-
-# Manage secrets
-kubectl exec -it vault-0 -n vault -- vault kv put secret/database/rds \
-    username=myuser \
-    password=mypassword
-
-kubectl exec -it vault-0 -n vault -- vault kv get secret/database/rds
-```
+---
 
 ## 🛠️ Local Development Setup
 

@@ -71,14 +71,3 @@ vault:
       service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
     externalPort: 8200
     targetPort: 8200
-
-  csi:
-    enabled: true
-    daemonSet:
-      resources:
-        requests:
-          cpu: 25m
-          memory: 32Mi
-        limits:
-          cpu: 50m
-          memory: 64Mi

@@ -9,9 +9,6 @@ spec:
     repoURL: https://github.com/thejondaw/devops-pet-project.git
     path: helm/charts/web
     targetRevision: master
-    helm:
-      valueFiles:
-        - ../../environments/values.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: app

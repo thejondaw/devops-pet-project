@@ -1,4 +1,4 @@
-# 🏗️ Enterprise-Grade Three-Tier Architecture on AWS
+# 🏗️ Three-Tier Architecture on AWS
 
 [![CI - Backend](https://github.com/thejondaw/devops-pet-project/actions/workflows/ci-backend.yaml/badge.svg)](https://github.com/thejondaw/devops-pet-project/actions/workflows/ci-backend.yaml)
 [![CI - Frontend](https://github.com/thejondaw/devops-pet-project/actions/workflows/ci-frontend.yaml/badge.svg)](https://github.com/thejondaw/devops-pet-project/actions/workflows/ci-frontend.yaml)
@@ -68,7 +68,7 @@ Each tier is containerized and deployed to EKS with dedicated responsibilities:
      - `PORT`: 3000
      - `DBUSER`: Database username
      - `DBPASS`: Database password
-     - `DBHOST`: Aurora endpoint
+     - `DBHOST`: Database endpoint
      - `DBPORT`: 5432
      - `DB`: Database name
 
@@ -80,7 +80,7 @@ Each tier is containerized and deployed to EKS with dedicated responsibilities:
 
 ## 🔄 CI/CD Pipeline Implementation
 
-This project demonstrates a comprehensive CI/CD approach following enterprise best practices:
+This project demonstrates a comprehensive CI/CD approach following best practices:
 
 ### 🔨 Continuous Integration (CI) Pipeline
 
@@ -243,10 +243,6 @@ db_configuration = {
 - [Local Development Guide](docs/local-tests.md)
 - [Security Overview](docs/security.md)
 - [Post-Installation Steps](docs/README.md)
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 <div align="center">
   <img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png">

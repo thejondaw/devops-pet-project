@@ -1,9 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-deploy
+  name: {{ .Release.Name }}
   labels:
     {{- include "api.labels" . | nindent 4 }}
+  annotations:
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/role: "api"
+    vault.hashicorp.com/agent-inject-secret-database: "secret/data/database"
+    vault.hashicorp.com/agent-inject-template-database: |
+      {{`{{- with secret "secret/data/database" -}}
+      {
+        "DBUSER": "{{ .Data.data.username }}",
+        "DBPASS": "{{ .Data.data.password }}",
+        "DBHOST": "{{ .Data.data.host }}",
+        "DBPORT": "{{ .Data.data.port }}",
+        "DB": "{{ .Data.data.dbname }}"
+      }
+      {{- end -}}`}}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -11,58 +25,27 @@ spec:
       {{- include "api.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      annotations:
-        vault.hashicorp.com/agent-inject: "true"
-        vault.hashicorp.com/role: "api"
-        vault.hashicorp.com/agent-inject-secret-database: "secret/data/database"
-        vault.hashicorp.com/agent-inject-template-database: |
-          {{`{{- with secret "secret/data/database" -}}
-          export DBUSER="{{ .Data.data.username }}"
-          export DBPASS="{{ .Data.data.password }}"
-          export DBHOST="{{ .Data.data.host }}"
-          export DBPORT="{{ .Data.data.port }}"
-          export DB="{{ .Data.data.dbname }}"
-          {{- end -}}`}}
       labels:
         {{- include "api.selectorLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ .Release.Name }}-sa
+      securityContext:
+        fsGroup: 1000
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.service.targetPort }}
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          env:
+            - name: VAULT_CONFIG
+              value: /vault/secrets/database
+            - name: PORT
+              value: "{{ .Values.service.targetPort }}"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          livenessProbe:
-            httpGet:
-              path: {{ .Values.livenessProbe.path }}
-              port: {{ .Values.service.targetPort }}
-            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
-          readinessProbe:
-            httpGet:
-              path: {{ .Values.readinessProbe.path }}
-              port: {{ .Values.service.targetPort }}
-            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
-          env:
-            - name: DBHOST
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Release.Name }}-cm
-                  key: DB_HOST
-            - name: DBPORT
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Release.Name }}-cm
-                  key: DB_PORT
-            - name: DB
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Release.Name }}-cm
-                  key: DB_NAME
           securityContext:
             allowPrivilegeEscalation: false
             runAsNonRoot: true
@@ -70,3 +53,15 @@ spec:
             capabilities:
               drop:
                 - ALL
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.livenessProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.readinessProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}

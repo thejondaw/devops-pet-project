@@ -1,16 +1,22 @@
 replicaCount: 1
+
 image:
   repository: jondaw/devops-api
-  tag: develop
+  tag: latest
   pullPolicy: IfNotPresent
 
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
 resources:
-  requests:
-    cpu: 50m
-    memory: 64Mi
   limits:
     cpu: 100m
     memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
 
 livenessProbe:
   path: /api/status
@@ -21,23 +27,3 @@ readinessProbe:
   path: /api/status
   initialDelaySeconds: 5
   periodSeconds: 10
-
-service:
-  type: LoadBalancer
-  port: 80
-  targetPort: 3000
-
-vault:
-  enabled: true
-  role: "api"
-  path: "aws/creds/rds-role"
-
-database:
-  port: "5432"
-  name: "devopsdb"
-  host: ""
-
-serviceAccount:
-  create: true
-  annotations: {}
-  name: ""

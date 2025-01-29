@@ -1,33 +1,28 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-deploy
-  labels:
-    {{- include "web.labels" . | nindent 4 }}
+  name: { { .Release.Name } }
+  labels: { { - include "web.labels" . | nindent 4 } }
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: { { .Values.replicaCount } }
   selector:
-    matchLabels:
-      {{- include "web.selectorLabels" . | nindent 6 }}
+    matchLabels: { { - include "web.selectorLabels" . | nindent 6 } }
   template:
     metadata:
-      labels:
-        {{- include "web.selectorLabels" . | nindent 8 }}
+      labels: { { - include "web.selectorLabels" . | nindent 8 } }
     spec:
       containers:
-        - name: {{ .Chart.Name }}
+        - name: { { .Chart.Name } }
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          imagePullPolicy: { { .Values.image.pullPolicy } }
           ports:
-            - containerPort: {{ .Values.service.targetPort }}
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            - name: http
+              containerPort: { { .Values.service.targetPort } }
+              protocol: TCP
           env:
             - name: API_HOST
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Release.Name }}-cm
-                  key: API_HOST
+              value: { { .Values.api.host } }
+          resources: { { - toYaml .Values.resources | nindent 12 } }
           securityContext:
             allowPrivilegeEscalation: false
             runAsNonRoot: true
@@ -35,17 +30,3 @@ spec:
             capabilities:
               drop:
                 - ALL
-      terminationGracePeriodSeconds: 30
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchExpressions:
-                    - key: app.kubernetes.io/name
-                      operator: In
-                      values:
-                        - {{ .Chart.Name }}
-                topologyKey: "kubernetes.io/hostname"
-                

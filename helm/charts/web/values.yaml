@@ -1,16 +1,9 @@
 replicaCount: 1
+
 image:
   repository: jondaw/devops-web
-  tag: app
+  tag: latest
   pullPolicy: IfNotPresent
-
-resources:
-  requests:
-    cpu: 50m
-    memory: 64Mi
-  limits:
-    cpu: 100m
-    memory: 128Mi
 
 service:
   type: ClusterIP
@@ -18,15 +11,20 @@ service:
   targetPort: 4000
 
 api:
-  host: "http://app-api"
+  host: http://api-svc.app.svc.cluster.local
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
 
 ingress:
   enabled: true
   className: nginx
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/proxy-body-size: "0"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
   path: /
   pathType: Prefix
