@@ -2,21 +2,23 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: "{{ .Release.Name }}-ingress"
-  labels: { { include "web.labels" . | indent 4 } }
+  name: {{ .Release.Name }}-ingress
+  labels:
+    app: web
   {{- with .Values.ingress.annotations }}
-  annotations: { { toYaml . | indent 4 } }
+  annotations:
+    {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  ingressClassName: "{{ .Values.ingress.className }}"
+  ingressClassName: {{ .Values.ingress.className }}
   rules:
     - http:
         paths:
-          - path: "{{ .Values.ingress.path }}"
-            pathType: "{{ .Values.ingress.pathType }}"
+          - path: {{ .Values.ingress.path }}
+            pathType: {{ .Values.ingress.pathType }}
             backend:
               service:
-                name: "{{ .Release.Name }}-svc"
+                name: {{ .Release.Name }}-svc
                 port:
-                  number: { { .Values.service.port } }
+                  number: {{ .Values.service.port }}
 {{- end }}
