@@ -98,6 +98,7 @@ vault kv put secret/database \
 
 # Configure Kubernetes authentication
 vault auth enable kubernetes
+
 vault write auth/kubernetes/config \
     kubernetes_host="https://kubernetes.default.svc"
 
@@ -116,7 +117,7 @@ vault write auth/kubernetes/role/api \
     ttl=1h
 ```
 
-```bash
+```shell
 # Port forwarding setup
 kubectl port-forward service/vault 8200:8200 -n vault
 

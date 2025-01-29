@@ -28,6 +28,15 @@ spec:
       labels:
         {{- include "api.selectorLabels" . | nindent 8 }}
     spec:
+      volumes:
+        - name: vault-secrets
+          emptyDir:
+            medium: Memory
+      containers:
+        - volumeMounts:
+            - name: vault-secrets
+              mountPath: /vault/secrets
+              readOnly: true
       serviceAccountName: {{ .Release.Name }}-sa
       securityContext:
         fsGroup: 1000
