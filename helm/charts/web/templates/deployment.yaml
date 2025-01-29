@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: { { .Release.Name } }
+  name: web-deployment
   labels:
     app: web
 spec:
@@ -15,7 +15,7 @@ spec:
         app: web
     spec:
       containers:
-        - name: { { .Chart.Name } }
+        - name: web
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: { { .Values.image.pullPolicy } }
           ports:
