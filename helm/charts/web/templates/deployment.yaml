@@ -24,8 +24,14 @@ spec:
               protocol: TCP
           env:
             - name: API_HOST
-              value: { { .Values.api.host } }
-          resources: { { - toYaml .Values.resources | nindent 12 } }
+              value: "{{ .Values.api.host }}"
+          resources:
+            requests:
+              cpu: { { .Values.resources.requests.cpu } }
+              memory: { { .Values.resources.requests.memory } }
+            limits:
+              cpu: { { .Values.resources.limits.cpu } }
+              memory: { { .Values.resources.limits.memory } }
           securityContext:
             allowPrivilegeEscalation: false
             runAsNonRoot: true
