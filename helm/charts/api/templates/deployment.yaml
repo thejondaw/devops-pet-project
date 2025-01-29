@@ -18,15 +18,14 @@ spec:
         vault.hashicorp.com/role: "api"
         vault.hashicorp.com/agent-inject-secret-database: "secret/data/database"
         vault.hashicorp.com/agent-inject-template-database: |
-          {{`{{- with secret "secret/data/database" -}}
-          {
-            "DBUSER": "{{ .Data.data.username }}",
-            "DBPASS": "{{ .Data.data.password }}",
-            "DBHOST": "{{ .Data.data.host }}",
-            "DBPORT": "{{ .Data.data.port }}",
-            "DB": "{{ .Data.data.dbname }}"
-          }
-          {{- end -}}`}}
+          {{`#!/bin/sh
+          {{- with secret "secret/data/database" -}}
+          export DBUSER="{{ .Data.data.username }}"
+          export DB="{{ .Data.data.dbname }}"
+          export DBPASS="{{ .Data.data.password }}"
+          export DBHOST="{{ .Data.data.host }}"
+          export DBPORT="{{ .Data.data.port }}"
+          {{- end }}`}}
     spec:
       serviceAccountName: {{ .Release.Name }}-sa
       securityContext:
@@ -35,13 +34,16 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              source /vault/secrets/database
+              npm start
           ports:
             - name: http
               containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
           env:
-            - name: VAULT_CONFIG
-              value: /vault/secrets/database
             - name: PORT
               value: "{{ .Values.service.targetPort }}"
           resources:
@@ -65,3 +67,6 @@ spec:
               port: http
             initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+          volumeMounts:
+            - name: vault-secrets
+              mountPath: /vault/secrets
