@@ -4,20 +4,6 @@ metadata:
   name: {{ .Release.Name }}
   labels:
     {{- include "api.labels" . | nindent 4 }}
-  annotations:
-    vault.hashicorp.com/agent-inject: "true"
-    vault.hashicorp.com/role: "api"
-    vault.hashicorp.com/agent-inject-secret-database: "secret/data/database"
-    vault.hashicorp.com/agent-inject-template-database: |
-      {{`{{- with secret "secret/data/database" -}}
-      {
-        "DBUSER": "{{ .Data.data.username }}",
-        "DBPASS": "{{ .Data.data.password }}",
-        "DBHOST": "{{ .Data.data.host }}",
-        "DBPORT": "{{ .Data.data.port }}",
-        "DB": "{{ .Data.data.dbname }}"
-      }
-      {{- end -}}`}}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -27,19 +13,28 @@ spec:
     metadata:
       labels:
         {{- include "api.selectorLabels" . | nindent 8 }}
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "api"
+        vault.hashicorp.com/agent-inject-secret-database: "secret/data/database"
+        vault.hashicorp.com/agent-inject-template-database: |
+          {{`{{- with secret "secret/data/database" -}}
+          {
+            "DBUSER": "{{ .Data.data.username }}",
+            "DBPASS": "{{ .Data.data.password }}",
+            "DBHOST": "{{ .Data.data.host }}",
+            "DBPORT": "{{ .Data.data.port }}",
+            "DB": "{{ .Data.data.dbname }}"
+          }
+          {{- end -}}`}}
     spec:
+      serviceAccountName: {{ .Release.Name }}-sa
+      securityContext:
+        fsGroup: 1000
       volumes:
         - name: vault-secrets
           emptyDir:
             medium: Memory
-      containers:
-        - volumeMounts:
-            - name: vault-secrets
-              mountPath: /vault/secrets
-              readOnly: true
-      serviceAccountName: {{ .Release.Name }}-sa
-      securityContext:
-        fsGroup: 1000
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -48,6 +43,10 @@ spec:
             - name: http
               containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
+          volumeMounts:
+            - name: vault-secrets
+              mountPath: /vault/secrets
+              readOnly: true
           env:
             - name: VAULT_CONFIG
               value: /vault/secrets/database
