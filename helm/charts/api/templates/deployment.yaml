@@ -19,13 +19,13 @@ spec:
         vault.hashicorp.com/agent-inject-secret-database: "secret/data/database"
         vault.hashicorp.com/agent-inject-template-database: |
           #!/bin/sh
-          {{ `{{- with secret "secret/data/database" }}
+          {{`{{- with secret "secret/data/database" }}
           export DBUSER="{{ .Data.data.username }}"
           export DB="{{ .Data.data.dbname }}"
           export DBPASS="{{ .Data.data.password }}"
-          export DBHOST="{{ .Data.data.host }}"
-          export DBPORT="{{ .Data.data.port }}"
-          {{- end }}` }}
+          export DBHOST="{{ .Values.database.host }}"
+          export DBPORT="{{ .Values.database.port }}"
+          {{- end }}`}}
     spec:
       serviceAccountName: api-sa
       securityContext:

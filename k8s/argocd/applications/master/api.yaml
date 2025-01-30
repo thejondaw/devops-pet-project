@@ -9,6 +9,10 @@ spec:
     repoURL: https://github.com/thejondaw/devops-pet-project.git
     path: helm/charts/api
     targetRevision: master
+    helm:
+      values: |
+        database:
+          endpoint: ${rds_endpoint}
   destination:
     server: https://kubernetes.default.svc
     namespace: app

@@ -117,8 +117,21 @@ log "Deploying Vault..."
 kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/vault.yaml
 
 # Applications
-# log "Deploying applications..."
-# kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/api.yaml
-# kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/web.yaml
+log "Deploying applications..."
+kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/api.yaml
+
+# Получаем RDS endpoint из terraform
+RDS_ENDPOINT=$(aws rds describe-db-instances \
+  --db-instance-identifier "${ENVIRONMENT}-postgres" \
+  --query 'DBInstances[0].Endpoint.Address' \
+  --output text)
+
+# Обновляем ConfigMap
+kubectl create configmap rds-endpoint \
+  --from-literal=rds_endpoint=${RDS_ENDPOINT} \
+  -n argocd \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/web.yaml
 
 log "Deployment completed successfully! Logs saved to: ${LOG_FILE}"

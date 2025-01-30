@@ -74,7 +74,6 @@ echo
 kubectl exec -it vault-0 -n vault -- sh
 vault operator init
 
-# Unseal the vault with 3 different keys
 vault operator unseal KEY1
 vault operator unseal KEY2
 vault operator unseal KEY3
@@ -85,15 +84,10 @@ vault login ROOT_TOKEN
 # Enable KV2 secrets engine and create database credentials
 vault secrets enable -path=secret kv-v2
 
-# Get RDS endpoint from terraform output
-DB_ENDPOINT=$(terraform -chdir=terraform/modules/rds output -raw db_endpoint)
-
 # Update Vault secret
 vault kv put secret/database \
     username="jondaw" \
     password="password" \
-    host="${DB_ENDPOINT}" \
-    port="5432" \
     dbname="devopsdb"
 
 # Configure Kubernetes authentication
