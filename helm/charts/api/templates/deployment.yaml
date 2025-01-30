@@ -18,14 +18,15 @@ spec:
         vault.hashicorp.com/role: "api"
         vault.hashicorp.com/agent-inject-secret-database: "secret/data/database"
         vault.hashicorp.com/agent-inject-template-database: |
-          #!/bin/sh
-          {{ `{{- with secret "secret/data/database" }}
-          export DBUSER="{{ .Data.data.username }}"
-          export DB="{{ .Data.data.dbname }}"
-          export DBPASS="{{ .Data.data.password }}"
-          export DBHOST="{{ .Data.data.host }}"
-          export DBPORT="{{ .Data.data.port }}"
-          {{- end }}` }}
+          {
+            {{`{{- with secret "secret/data/database" -}}
+            "DBUSER": "{{ .Data.data.username }}",
+            "DB": "{{ .Data.data.dbname }}",
+            "DBPASS": "{{ .Data.data.password }}",
+            "DBHOST": "{{ .Data.data.host }}",
+            "DBPORT": "{{ .Data.data.port }}"
+            {{- end -}}`}}
+          }
     spec:
       serviceAccountName: api-sa
       securityContext:
@@ -36,7 +37,9 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/bin/sh", "-c"]
           args:
-            - source /vault/secrets/database && npm start
+            - |
+              export $(cat /vault/secrets/database | jq -r 'to_entries | .[] | .key + "=" + .value')
+              npm start
           ports:
             - name: http
               containerPort: {{ .Values.service.targetPort }}
@@ -44,3 +47,22 @@ spec:
           env:
             - name: PORT
               value: "{{ .Values.service.targetPort }}"
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.livenessProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.readinessProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}

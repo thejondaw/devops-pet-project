@@ -27,3 +27,8 @@ readinessProbe:
   path: /api/status
   initialDelaySeconds: 5
   periodSeconds: 10
+
+database:
+  host: "develop-postgres.xxxxx.us-east-2.rds.amazonaws.com"
+  port: "5432"
+  name: "devopsdb"
