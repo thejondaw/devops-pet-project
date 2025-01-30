@@ -1,22 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: { { .Release.Name } }
-  labels: { { - include "api.labels" . | nindent 4 } }
+  name: {{ .Release.Name }}
+  labels:
+    {{- include "api.labels" . | nindent 4 }}
 spec:
-  replicas: { { .Values.replicaCount } }
+  replicas: {{ .Values.replicaCount }}
   selector:
-    matchLabels: { { - include "api.selectorLabels" . | nindent 6 } }
+    matchLabels:
+      {{- include "api.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      labels: { { - include "api.selectorLabels" . | nindent 8 } }
+      labels:
+        {{- include "api.selectorLabels" . | nindent 8 }}
       annotations:
         vault.hashicorp.com/agent-inject: "true"
         vault.hashicorp.com/role: "api"
         vault.hashicorp.com/agent-inject-secret-database: "secret/data/database"
         vault.hashicorp.com/agent-inject-template-database: |
-          {{`#!/bin/sh
-          {{- with secret "secret/data/database" -}}
+          #!/bin/sh
+          {{`{{- with secret "secret/data/database" -}}
           export DBUSER="{{ .Data.data.username }}"
           export DB="{{ .Data.data.dbname }}"
           export DBPASS="{{ .Data.data.password }}"
@@ -32,43 +35,19 @@ spec:
           emptyDir:
             medium: Memory
       containers:
-        - name: { { .Chart.Name } }
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: { { .Values.image.pullPolicy } }
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default "latest" }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/bin/sh", "-c"]
           args:
-            - |
-              source /vault/secrets/database
-              npm start
+            - source /vault/secrets/database && npm start
           ports:
             - name: http
-              containerPort: { { .Values.service.targetPort } }
+              containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
           env:
             - name: PORT
               value: "{{ .Values.service.targetPort }}"
-          resources: { { - toYaml .Values.resources | nindent 12 } }
-          securityContext:
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1000
-            capabilities:
-              drop:
-                - ALL
-          livenessProbe:
-            httpGet:
-              path: { { .Values.livenessProbe.path } }
-              port: http
-            initialDelaySeconds:
-              { { .Values.livenessProbe.initialDelaySeconds } }
-            periodSeconds: { { .Values.livenessProbe.periodSeconds } }
-          readinessProbe:
-            httpGet:
-              path: { { .Values.readinessProbe.path } }
-              port: http
-            initialDelaySeconds:
-              { { .Values.readinessProbe.initialDelaySeconds } }
-            periodSeconds: { { .Values.readinessProbe.periodSeconds } }
           volumeMounts:
             - name: vault-secrets
               mountPath: /vault/secrets
