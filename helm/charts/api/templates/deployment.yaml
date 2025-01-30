@@ -30,10 +30,6 @@ spec:
       serviceAccountName: api-sa
       securityContext:
         fsGroup: 1000
-      volumes:
-        - name: vault-secrets
-          emptyDir:
-            medium: Memory
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default "latest" }}"
@@ -48,6 +44,3 @@ spec:
           env:
             - name: PORT
               value: "{{ .Values.service.targetPort }}"
-          volumeMounts:
-            - name: vault-secrets
-              mountPath: /vault/secrets
