@@ -24,8 +24,6 @@ spec:
           export DB="{{ .Data.data.dbname }}"
           export DBPASS="{{ .Data.data.password }}"
           {{- end }}`}}
-          export DBHOST="{{ .Values.database.host }}"
-          export DBPORT="{{ .Values.database.port }}"
     spec:
       serviceAccountName: api-sa
       containers:
@@ -35,10 +33,10 @@ spec:
           command: ["/bin/sh", "-c"]
           args:
             - source /vault/secrets/database && npm start
-          ports:
-            - name: http
-              containerPort: {{ .Values.service.targetPort }}
-              protocol: TCP
           env:
             - name: PORT
               value: "{{ .Values.service.targetPort }}"
+            - name: DBHOST  # Переносим host/port в env
+              value: "{{ .Values.database.host }}"
+            - name: DBPORT
+              value: "{{ .Values.database.port }}"
