@@ -1,18 +1,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}
-  labels:
-    {{- include "api.labels" . | nindent 4 }}
+  name: { { .Release.Name } }
+  labels: { { - include "api.labels" . | nindent 4 } }
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: { { .Values.replicaCount } }
   selector:
-    matchLabels:
-      {{- include "api.selectorLabels" . | nindent 6 }}
+    matchLabels: { { - include "api.selectorLabels" . | nindent 6 } }
   template:
     metadata:
-      labels:
-        {{- include "api.selectorLabels" . | nindent 8 }}
+      labels: { { - include "api.selectorLabels" . | nindent 8 } }
       annotations:
         vault.hashicorp.com/agent-inject: "true"
         vault.hashicorp.com/role: "api"
@@ -27,13 +24,17 @@ spec:
           export DBPORT="{{ .Data.data.port }}"
           {{- end }}`}}
     spec:
-      serviceAccountName: {{ .Release.Name }}-sa
+      serviceAccountName: api-sa
       securityContext:
         fsGroup: 1000
+      volumes:
+        - name: vault-secrets
+          emptyDir:
+            medium: Memory
       containers:
-        - name: {{ .Chart.Name }}
+        - name: { { .Chart.Name } }
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          imagePullPolicy: { { .Values.image.pullPolicy } }
           command: ["/bin/sh", "-c"]
           args:
             - |
@@ -41,13 +42,12 @@ spec:
               npm start
           ports:
             - name: http
-              containerPort: {{ .Values.service.targetPort }}
+              containerPort: { { .Values.service.targetPort } }
               protocol: TCP
           env:
             - name: PORT
               value: "{{ .Values.service.targetPort }}"
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+          resources: { { - toYaml .Values.resources | nindent 12 } }
           securityContext:
             allowPrivilegeEscalation: false
             runAsNonRoot: true
@@ -57,16 +57,18 @@ spec:
                 - ALL
           livenessProbe:
             httpGet:
-              path: {{ .Values.livenessProbe.path }}
+              path: { { .Values.livenessProbe.path } }
               port: http
-            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            initialDelaySeconds:
+              { { .Values.livenessProbe.initialDelaySeconds } }
+            periodSeconds: { { .Values.livenessProbe.periodSeconds } }
           readinessProbe:
             httpGet:
-              path: {{ .Values.readinessProbe.path }}
+              path: { { .Values.readinessProbe.path } }
               port: http
-            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            initialDelaySeconds:
+              { { .Values.readinessProbe.initialDelaySeconds } }
+            periodSeconds: { { .Values.readinessProbe.periodSeconds } }
           volumeMounts:
             - name: vault-secrets
               mountPath: /vault/secrets
