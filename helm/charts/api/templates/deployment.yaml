@@ -23,13 +23,11 @@ spec:
           export DBUSER="{{ .Data.data.username }}"
           export DB="{{ .Data.data.dbname }}"
           export DBPASS="{{ .Data.data.password }}"
+          {{- end }}`}}
           export DBHOST="{{ .Values.database.host }}"
           export DBPORT="{{ .Values.database.port }}"
-          {{- end }}`}}
     spec:
       serviceAccountName: api-sa
-      securityContext:
-        fsGroup: 1000
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default "latest" }}"
