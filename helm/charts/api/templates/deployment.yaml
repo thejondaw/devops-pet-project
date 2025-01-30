@@ -32,7 +32,11 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/bin/sh", "-c"]
           args:
-            - source /vault/secrets/database && npm start
+            - |
+              source /vault/secrets/database && \
+              export DBHOST="{{ .Values.database.host }}" && \
+              export DBPORT="{{ .Values.database.port }}" && \
+              npm start
           env:
             - name: PORT
               value: "{{ .Values.service.targetPort }}"
