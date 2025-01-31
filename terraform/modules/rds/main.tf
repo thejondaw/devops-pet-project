@@ -1,6 +1,6 @@
 # Parameter group for PostgreSQL logging
 resource "aws_db_parameter_group" "postgresql" {
-  family = "postgres17" # Changed to match PostgreSQL 17
+  family = "postgres17"
   name   = "${var.environment}-postgres-params"
 
   parameter {
@@ -16,12 +16,6 @@ resource "aws_db_parameter_group" "postgresql" {
   parameter {
     name  = "rds.force_ssl"
     value = "0"
-  }
-
-  # Allowing connections from VPC CIDR
-  parameter {
-    name  = "pg_hba.conf"
-    value = "host all all 0.0.0.0/0 md5"
   }
 }
 
