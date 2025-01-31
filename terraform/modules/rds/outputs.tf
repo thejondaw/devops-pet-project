@@ -10,8 +10,3 @@ output "db_name" {
   value       = aws_db_instance.postgresql.db_name
 }
 
-# Output - DB Password
-output "database_password" {
-  value     = random_password.postgresql_password.result
-  sensitive = true
-}

@@ -284,3 +284,35 @@ promtail:
             target_label: namespace
           - source_labels: ["__meta_kubernetes_pod_node_name"]
             target_label: node
+
+falco:
+  customRules:
+    rules-network.yaml: |-
+      - rule: Suspicious Network Tool Spawned
+        desc: Detect network tools spawned in the container
+        condition: >
+          spawned_process and container
+          and proc.name in (nc, ncat, nmap, tcpdump, tshark, wireshark)
+        output: >
+          Network tool spawned in container (user=%user.name
+          command=%proc.cmdline container=%container.info)
+        priority: WARNING
+
+  falco:
+    logOutput:
+      enabled: true
+    json_output: true
+    json_include_output_property: true
+
+    programOutput:
+      enabled: true
+      keepAlive: false
+      program: "curl -d @- -X POST http://monitoring-loki:3100/loki/api/v1/push"
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 200m
+      memory: 512Mi

@@ -19,13 +19,6 @@ resource "aws_db_parameter_group" "postgresql" {
   }
 }
 
-# Generate random password for RDS
-resource "random_password" "postgresql_password" {
-  length           = 16
-  special          = true
-  override_special = "!#$%"
-}
-
 # Main PostgreSQL instance with cost-effective settings
 resource "aws_db_instance" "postgresql" {
   identifier = "${var.environment}-postgres"
@@ -43,7 +36,7 @@ resource "aws_db_instance" "postgresql" {
   # Database settings
   db_name  = var.db_configuration.name
   username = var.db_configuration.username
-  password = random_password.postgresql_password.result
+  password = "password"
   port     = var.db_configuration.port
 
   # Network configuration
