@@ -18,12 +18,14 @@ spec:
         vault.hashicorp.com/role: "api"
         vault.hashicorp.com/agent-inject-secret-database: "secret/data/database"
         vault.hashicorp.com/agent-inject-template-database: |
-          #!/bin/sh
-          {{`{{- with secret "secret/data/database" }}
-          export DBUSER="{{ .Data.data.username }}"
-          export DB="{{ .Data.data.dbname }}"
-          export DBPASS="{{ .Data.data.password }}"
-          {{- end }}`}}
+            #!/bin/sh
+            {{`{{- with secret "secret/data/database" }}
+            export DBUSER="{{ .Data.data.username }}"
+            export DBPASS="{{ .Data.data.password }}"
+            export DB="{{ .Data.data.dbname }}"
+            {{- end }}`}}
+            export DBHOST="{{ .Values.database.host }}"
+            export DBPORT="{{ .Values.database.port }}"
     spec:
       serviceAccountName: api-sa
       containers:

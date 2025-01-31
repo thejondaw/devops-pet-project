@@ -12,6 +12,17 @@ resource "aws_db_parameter_group" "postgresql" {
     name  = "log_min_duration_statement"
     value = "1000"
   }
+
+  parameter {
+    name  = "rds.force_ssl"
+    value = "0"
+  }
+
+  # Allowing connections from VPC CIDR
+  parameter {
+    name  = "pg_hba.conf"
+    value = "host all all 0.0.0.0/0 md5"
+  }
 }
 
 # Generate random password for RDS
