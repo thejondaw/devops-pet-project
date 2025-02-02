@@ -266,7 +266,7 @@ promtail:
 
 # --- Falco runtime security ---
 falco:
-  driver: # eBPF configuration
+  driver:  # eBPF configuration
     enabled: true
     kind: ebpf
     loader:
@@ -277,7 +277,7 @@ falco:
             value: "/root/.falco/falco-bpf.o"
         args: []
 
-  containerSecurityContext: # Required privileges
+  containerSecurityContext:  # Required privileges
     privileged: true
     capabilities:
       add:
@@ -288,7 +288,7 @@ falco:
         - IPC_LOCK
         - SYS_NICE
 
-  mounts: # Mount required directories
+  mounts:  # Mount required directories
     volumes:
       - name: debugfs
         hostPath:
@@ -297,7 +297,7 @@ falco:
       - mountPath: /sys/kernel/debug
         name: debugfs
 
-  collectors: # Container runtime integrations
+  collectors:  # Container runtime integrations
     enabled: true
     docker:
       enabled: true
@@ -309,16 +309,16 @@ falco:
       enabled: true
       socket: /run/crio/crio.sock
 
-  log_level: info # Logging configuration
+  log_level: info  # Logging configuration
   json_output: true
   log_stderr: true
 
-  rules_files: # Security rules
+  rules_files:  # Security rules
     - /etc/falco/falco_rules.yaml
     - /etc/falco/falco_rules.local.yaml
     - /etc/falco/rules.d
 
-  stdout_output: # Output configuration
+  stdout_output:  # Output configuration
     enabled: true
   syslog_output:
     enabled: false
