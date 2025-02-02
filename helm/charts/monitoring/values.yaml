@@ -266,6 +266,12 @@ promtail:
 
 # --- Falco runtime security ---
 falco:
+  metrics:
+    enabled: true
+    interval: 15s
+    service:
+      type: ClusterIP
+      port: 8765
   driver:
     enabled: true
     kind: ebpf
@@ -273,7 +279,7 @@ falco:
       enabled: true
       initContainer:
         securityContext:
-          privileged: true # Даем права init-контейнеру
+          privileged: true
         env:
           - name: FALCO_BPF_PROBE
             value: "/root/.falco/falco-bpf.o"

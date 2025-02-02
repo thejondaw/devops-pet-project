@@ -63,6 +63,12 @@ echo
 - Node Exporter: https://grafana.com/grafana/dashboards/1860
 - Kubernetes: https://grafana.com/grafana/dashboards/315
 
+```shell
+# Prometheus Web Site
+kubectl port-forward -n monitoring svc/monitoring-prometheus-server 9090:80
+http://localhost:9090
+```
+
 ---
 
 ### 🔒 HashiCorp Vault Configuration
