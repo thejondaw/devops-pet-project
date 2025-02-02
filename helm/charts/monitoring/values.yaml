@@ -4,12 +4,9 @@ fullnameOverride: monitoring
 
 # --- Prometheus configuration ---
 prometheus:
+  prometheusOperator:
+    createCustomResource: true
   server:
-    serviceMonitorSelectorNilUsesHelmValues: false
-    serviceMonitor:
-      selectors:
-        release: monitoring
-        app: falco
     persistentVolume:
       enabled: true # Enable persistent volume for Prometheus server data
       size: 4Gi
@@ -39,16 +36,6 @@ prometheus:
 
 # --- Grafana configuration ---
 grafana:
-  dashboards:
-    default:
-      falco-dashboard:
-        gnetId: 11914 # ID первого дашборда
-        revision: 1
-        datasource: Prometheus
-      falco-dashboard-2:
-        gnetId: 17319 # ID второго дашборда
-        revision: 1
-        datasource: Loki
   persistence: # Persistent storage for Grafana dashboards
     type: pvc
     enabled: true
@@ -293,20 +280,9 @@ falco:
       scrapeTimeout: 10s
       additionalLabels:
         release: monitoring
-
-  alerts:
-    enabled: true
-    rate_limit: 3600
-
-  customRules:
-    custom_rules.yaml: |-
-      - rule: Terminal shell in container
-        desc: A shell was used as the entrypoint/exec point into a container
-        condition: >
-          spawned_process and container
-          and shell_procs and proc.name != "entrypoint"
-        output: Shell opened in container (user=%user.name container=%container.info shell=%proc.name parent=%proc.pname)
-        priority: WARNING
+    prometheusMetrics:
+      enabled: true
+      target: http://monitoring-prometheus-server
 
   driver:
     enabled: true
