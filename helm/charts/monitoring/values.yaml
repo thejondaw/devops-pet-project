@@ -1,23 +1,25 @@
+# --- Global overrides ---
 nameOverride: monitoring
 fullnameOverride: monitoring
 
+# --- Prometheus configuration ---
 prometheus:
   server:
     persistentVolume:
-      enabled: true
+      enabled: true  # Enable persistent volume for Prometheus server data
       size: 4Gi
     service:
-      type: LoadBalancer
+      type: LoadBalancer  # Expose Prometheus via AWS NLB
       annotations:
         service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-    resources:
+    resources:  # Resource limits for Prometheus server
       limits:
         cpu: 300m
         memory: 512Mi
       requests:
         cpu: 100m
         memory: 256Mi
-    affinity:
+    affinity:  # Spread Prometheus pods across different nodes
       podAntiAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
           - weight: 100
@@ -30,28 +32,26 @@ prometheus:
                       - prometheus
               topologyKey: "kubernetes.io/hostname"
 
+# --- Grafana configuration ---
 grafana:
-  persistence:
+  persistence:  # Persistent storage for Grafana dashboards
     type: pvc
     enabled: true
     size: 2Gi
-
-  service:
+  service:  # Expose Grafana via AWS NLB
     type: LoadBalancer
     port: 80
     targetPort: 3000
     annotations:
       service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-
-  resources:
+  resources:  # Resource allocation for Grafana
     limits:
       cpu: 200m
       memory: 256Mi
     requests:
       cpu: 100m
       memory: 128Mi
-
-  affinity:
+  affinity:  # Pod anti-affinity rules
     podAntiAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
         - weight: 100
@@ -63,18 +63,17 @@ grafana:
                   values:
                     - grafana
             topologyKey: "kubernetes.io/hostname"
-
-  datasources:
+  datasources:  # Preconfigured data sources
     datasources.yaml:
       apiVersion: 1
       deleteDatasources: []
       datasources:
-        - name: Prometheus
+        - name: Prometheus  # Default Prometheus datasource
           type: prometheus
           url: http://monitoring-prometheus-server
           access: proxy
           isDefault: true
-        - name: Loki
+        - name: Loki  # Loki logs datasource
           type: loki
           access: proxy
           url: http://monitoring-loki.monitoring.svc.cluster.local:3100
@@ -87,11 +86,9 @@ grafana:
           version: 1
           editable: true
           basicAuth: false
-
-  adminUser: admin
+  adminUser: admin  # Default admin credentials
   adminPassword: admin
-
-  grafana.ini:
+  grafana.ini:  # Grafana server configuration
     server:
       root_url: "%(protocol)s://%(domain)s/"
     auth:
@@ -99,14 +96,14 @@ grafana:
     security:
       allow_embedding: true
 
+# --- Loki configuration ---
 loki:
   enabled: true
-  singleBinary:
+  singleBinary:  # Single binary mode for simplicity
     replicas: 1
     extraArgs:
       - -memberlist.bind-addr=0.0.0.0:7946
-
-  affinity:
+  affinity:  # Spread Loki pods
     podAntiAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
         - weight: 100
@@ -118,8 +115,7 @@ loki:
                   values:
                     - loki
             topologyKey: "kubernetes.io/hostname"
-
-  livenessProbe:
+  livenessProbe:  # Health checks
     httpGet:
       path: /ready
       port: http-metrics
@@ -128,7 +124,6 @@ loki:
     periodSeconds: 20
     successThreshold: 1
     failureThreshold: 6
-
   readinessProbe:
     httpGet:
       path: /ready
@@ -138,15 +133,13 @@ loki:
     periodSeconds: 20
     successThreshold: 1
     failureThreshold: 6
-
-  service:
+  service:  # Internal ClusterIP service
     type: ClusterIP
     name: monitoring-loki
     port: 3100
     targetPort: 3100
     annotations: {}
-
-  containerSecurityContext:
+  containerSecurityContext:  # Security restrictions
     runAsUser: 10001
     runAsGroup: 10001
     runAsNonRoot: true
@@ -154,21 +147,18 @@ loki:
       drop:
         - ALL
     readOnlyRootFilesystem: true
-
-  persistence:
+  persistence:  # Loki data storage
     enabled: true
     size: 5Gi
     storageClass: gp2
-
-  resources:
+  resources:  # Loki resource allocation
     limits:
       cpu: 500m
       memory: 512Mi
     requests:
       cpu: 200m
       memory: 256Mi
-
-  config:
+  config:  # Loki server configuration
     auth_enabled: false
     server:
       http_listen_port: 3100
@@ -176,7 +166,6 @@ loki:
       grpc_listen_port: 9095
       grpc_listen_address: "0.0.0.0"
       log_level: "info"
-
     ingester:
       lifecycler:
         address: "0.0.0.0"
@@ -188,7 +177,6 @@ loki:
       chunk_retain_period: 15m
       wal:
         dir: /data/loki/wal
-
     storage_config:
       boltdb_shipper:
         active_index_directory: /data/loki/index
@@ -196,7 +184,6 @@ loki:
         shared_store: filesystem
       filesystem:
         directory: /data/loki/chunks
-
     schema_config:
       configs:
         - from: "2020-10-24"
@@ -206,36 +193,32 @@ loki:
           index:
             prefix: index_
             period: 24h
-
     compactor:
       shared_store: filesystem
       working_directory: /data/loki/boltdb-shipper-compactor
       retention_enabled: false
-
     limits_config:
       enforce_metric_name: false
       reject_old_samples: true
       reject_old_samples_max_age: 168h
       max_entries_limit_per_query: 5000
-
     table_manager:
       retention_deletes_enabled: false
       retention_period: 0s
 
+# --- Promtail configuration ---
 promtail:
   enabled: true
-  resources:
+  resources:  # Promtail resource limits
     limits:
       cpu: 100m
       memory: 128Mi
     requests:
       cpu: 50m
       memory: 64Mi
-
-  tolerations:
+  tolerations:  # Allow scheduling on all nodes
     - operator: Exists
-
-  affinity:
+  affinity:  # Spread Promtail pods
     podAntiAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
         - weight: 100
@@ -247,12 +230,10 @@ promtail:
                   values:
                     - promtail
             topologyKey: "kubernetes.io/hostname"
-
-  config:
+  config:  # Log collection setup
     server:
       log_level: debug
       http_listen_port: 3101
-
     clients:
       - url: http://monitoring-loki:3100/loki/api/v1/push
         tenant_id: fake
@@ -265,14 +246,12 @@ promtail:
         backoff_config:
           min_period: "100ms"
           max_period: "5s"
-
     positions:
       filename: /run/promtail/positions.yaml
-
-    scrape_configs:
+    scrape_configs:  # Kubernetes pod log scraping
       - job_name: kubernetes-pods
         pipeline_stages:
-          - cri: {}
+          - cri: {}  # CRI parser for container logs
         kubernetes_sd_configs:
           - role: pod
         relabel_configs:
@@ -285,34 +264,40 @@ promtail:
           - source_labels: ["__meta_kubernetes_pod_node_name"]
             target_label: node
 
+# --- Falco runtime security ---
 falco:
-  customRules:
-    rules-network.yaml: |-
-      - rule: Suspicious Network Tool Spawned
-        desc: Detect network tools spawned in the container
-        condition: >
-          spawned_process and container
-          and proc.name in (nc, ncat, nmap, tcpdump, tshark, wireshark)
-        output: >
-          Network tool spawned in container (user=%user.name
-          command=%proc.cmdline container=%container.info)
-        priority: WARNING
-
-  falco:
-    logOutput:
+  driver:  # eBPF configuration
+    enabled: true
+    kind: ebpf
+    ebpf:
+      path: "/tmp/falco-bpf.o"
+  collectors:  # Container runtime integrations
+    enabled: true
+    docker:
       enabled: true
-    json_output: true
-    json_include_output_property: true
-
-    programOutput:
+      socket: /var/run/docker.sock
+    containerd:
       enabled: true
-      keepAlive: false
-      program: "curl -d @- -X POST http://monitoring-loki:3100/loki/api/v1/push"
-
-  resources:
-    requests:
-      cpu: 100m
-      memory: 256Mi
-    limits:
-      cpu: 200m
-      memory: 512Mi
+      socket: /run/containerd/containerd.sock
+    crio:
+      enabled: true
+      socket: /run/crio/crio.sock
+  log_level: info  # Logging configuration
+  json_output: true
+  log_stderr: true
+  rules_files:  # Security rules
+    - /etc/falco/falco_rules.yaml
+    - /etc/falco/falco_rules.local.yaml
+    - /etc/falco/rules.d
+  stdout_output:  # Output configuration
+    enabled: true
+  syslog_output:
+    enabled: false
+  containerSecurityContext:  # Required privileges
+    privileged: true
+    capabilities:
+      add:
+        - SYS_ADMIN
+        - SYS_RESOURCE
+        - SYS_PTRACE
+        - NET_ADMIN
