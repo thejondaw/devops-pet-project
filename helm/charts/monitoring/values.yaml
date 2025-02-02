@@ -266,14 +266,30 @@ promtail:
 
 # --- Falco runtime security ---
 falco:
-  driver: # eBPF configuration
+  driver:
     enabled: true
     kind: ebpf
-    ebpf:
-      path: "/tmp/falco-bpf.o"
-      hostNetwork: true # Добавим эту настройку
+    loader:
+      enabled: true
+      initContainer:
+        securityContext:
+          privileged: true # Даем права init-контейнеру
+        env:
+          - name: FALCO_BPF_PROBE
+            value: "/root/.falco/falco-bpf.o"
 
-  collectors: # Container runtime integrations
+  containerSecurityContext:
+    privileged: true
+    capabilities:
+      add:
+        - SYS_ADMIN
+        - SYS_RESOURCE
+        - SYS_PTRACE
+        - NET_ADMIN
+        - IPC_LOCK
+        - SYS_NICE
+
+  collectors:
     enabled: true
     docker:
       enabled: true
@@ -285,27 +301,16 @@ falco:
       enabled: true
       socket: /run/crio/crio.sock
 
-  log_level: info # Logging configuration
+  log_level: info
   json_output: true
   log_stderr: true
 
-  rules_files: # Security rules
+  rules_files:
     - /etc/falco/falco_rules.yaml
     - /etc/falco/falco_rules.local.yaml
     - /etc/falco/rules.d
 
-  stdout_output: # Output configuration
+  stdout_output:
     enabled: true
   syslog_output:
     enabled: false
-
-  containerSecurityContext: # Required privileges
-    privileged: true
-    capabilities:
-      add:
-        - SYS_ADMIN
-        - SYS_RESOURCE
-        - SYS_PTRACE
-        - NET_ADMIN
-        - IPC_LOCK
-        - SYS_NICE
