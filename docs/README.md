@@ -42,6 +42,8 @@ echo
 
 #### Grafana Dashboard Configuration
 
+17319 11914
+
 ```plaintext
 ╔══ Node Monitoring Setup ═══════════════════════╗
 ║ 1. Navigate: Grafana -> Dashboards -> Import   ║

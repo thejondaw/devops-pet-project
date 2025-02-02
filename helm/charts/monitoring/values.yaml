@@ -5,7 +5,10 @@ fullnameOverride: monitoring
 # --- Prometheus configuration ---
 prometheus:
   prometheusOperator:
+    enabled: true
     createCustomResource: true
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
   server:
     persistentVolume:
       enabled: true # Enable persistent volume for Prometheus server data
