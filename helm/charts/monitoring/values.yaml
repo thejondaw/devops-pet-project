@@ -4,11 +4,6 @@ fullnameOverride: monitoring
 
 # --- Prometheus configuration ---
 prometheus:
-  prometheusOperator:
-    enabled: true
-    createCustomResource: true
-  prometheusSpec:
-    serviceMonitorSelectorNilUsesHelmValues: false
   server:
     persistentVolume:
       enabled: true # Enable persistent volume for Prometheus server data
@@ -268,70 +263,3 @@ promtail:
             target_label: namespace
           - source_labels: ["__meta_kubernetes_pod_node_name"]
             target_label: node
-
-# --- Falco runtime security ---
-falco:
-  metrics:
-    enabled: true
-    service:
-      type: ClusterIP
-      port: 8765
-    serviceMonitor:
-      enabled: true
-      namespace: monitoring
-      interval: 15s
-      scrapeTimeout: 10s
-      additionalLabels:
-        release: monitoring
-    prometheusMetrics:
-      enabled: true
-      target: http://monitoring-prometheus-server
-
-  driver:
-    enabled: true
-    kind: ebpf
-    loader:
-      enabled: true
-      initContainer:
-        securityContext:
-          privileged: true
-        env:
-          - name: FALCO_BPF_PROBE
-            value: "/root/.falco/falco-bpf.o"
-
-  containerSecurityContext:
-    privileged: true
-    capabilities:
-      add:
-        - SYS_ADMIN
-        - SYS_RESOURCE
-        - SYS_PTRACE
-        - NET_ADMIN
-        - IPC_LOCK
-        - SYS_NICE
-
-  collectors:
-    enabled: true
-    docker:
-      enabled: true
-      socket: /var/run/docker.sock
-    containerd:
-      enabled: true
-      socket: /run/containerd/containerd.sock
-    crio:
-      enabled: true
-      socket: /run/crio/crio.sock
-
-  log_level: info
-  json_output: true
-  log_stderr: true
-
-  rules_files:
-    - /etc/falco/falco_rules.yaml
-    - /etc/falco/falco_rules.local.yaml
-    - /etc/falco/rules.d
-
-  stdout_output:
-    enabled: true
-  syslog_output:
-    enabled: false
