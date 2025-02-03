@@ -42,7 +42,7 @@ echo
 
 #### Grafana Dashboard Configuration
 
-17319 11914
+17319
 
 ```plaintext
 ╔══ Node Monitoring Setup ═══════════════════════╗

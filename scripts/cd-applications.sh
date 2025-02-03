@@ -112,6 +112,9 @@ kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/monitoring.yaml
 wait_for_deployment "monitoring" "app.kubernetes.io/name=prometheus" 300
 wait_for_deployment "monitoring" "app.kubernetes.io/name=grafana" 300
 
+# Falco
+kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/falco.yaml
+
 # Vault
 log "Deploying Vault..."
 kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/vault.yaml
