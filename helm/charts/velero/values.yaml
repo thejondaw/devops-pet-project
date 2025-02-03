@@ -1,0 +1,60 @@
+velero:
+  # Init container settings
+  initContainers:
+    - name: velero-plugin-for-aws
+      image: velero/velero-plugin-for-aws:v1.9.2 # Plugin for AWS S3
+      imagePullPolicy: IfNotPresent
+      volumeMounts:
+        - mountPath: /target
+          name: plugins
+
+  # Main settings
+  configuration:
+    provider: aws
+    backupStorageLocation:
+      name: default
+      provider: aws
+      # Using existing S3 bucket with prefix for velero
+      bucket: alexsuff
+      prefix: velero/${ENVIRONMENT}
+      config:
+        region: us-east-2
+
+  # Schedule daily backups at 3 AM
+  schedules:
+    daily-backup:
+      schedule: "0 3 * * *"
+      template:
+        ttl: "168h" # Keep backups for 7 days
+        includedNamespaces:
+          - "*"
+        excludedNamespaces:
+          - kube-system
+        includeClusterResources: true
+        storageLocation: default
+
+  # Resource limits
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 100m
+      memory: 256Mi
+
+  # Security context
+  securityContext:
+    fsGroup: 65534
+
+  # Service account for AWS permissions
+  serviceAccount:
+    server:
+      create: true
+      annotations:
+        eks.amazonaws.com/role-arn: arn:aws:iam::${AWS_ACCOUNT_ID}:role/${ENVIRONMENT}-velero-role
+
+  # Metrics for Prometheus
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
