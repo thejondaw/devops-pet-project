@@ -42,7 +42,6 @@ echo
 
 #### Grafana Dashboard Configuration
 
-17319
 
 ```plaintext
 ╔══ Node Monitoring Setup ═══════════════════════╗
@@ -119,13 +118,7 @@ vault write auth/kubernetes/role/api \
     ttl=1h
 ```
 
-```shell
-# Port forwarding setup
-kubectl port-forward service/vault 8200:8200 -n vault
-
-# Access URL
-http://localhost:8200
-```
+### Additional info about Vault
 
 ```shell
 # Что у нас реально в секретах Vault
@@ -133,6 +126,12 @@ kubectl exec -it vault-0 -n vault -- vault kv get secret/database
 
 # И что инжектится в под
 kubectl exec -it api-6757d879fb-gq5tj -n app -- cat /vault/secrets/database
+
+# Port forwarding setup
+kubectl port-forward service/vault 8200:8200 -n vault
+
+# Access URL
+http://localhost:8200
 ```
 
 ---

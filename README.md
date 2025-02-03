@@ -1,3 +1,9 @@
+> ### ⚠️ Disclaimer
+>
+>  This is a pet project focused on practical DevOps implementation using AWS services and modern CI/CD practices. The infrastructure prioritizes development experience and learning opportunities over enterprise-grade configurations and high availability. All cost-optimization decisions are intentional for educational purposes.
+
+---
+
 # 🏗️ Three-Tier Architecture on AWS
 
 [![CI - Backend](https://github.com/thejondaw/devops-pet-project/actions/workflows/ci-backend.yaml/badge.svg)](https://github.com/thejondaw/devops-pet-project/actions/workflows/ci-backend.yaml)
@@ -72,11 +78,12 @@ Each tier is containerized and deployed to EKS with dedicated responsibilities:
      - `DBPORT`: 5432
      - `DB`: Database name
 
-3. **Database Tier (Aurora PostgreSQL)**
-   - Serverless v2 for auto-scaling
-   - Multi-AZ deployment
-   - Automated backups
-   - Encrypted at rest and in transit
+3. **Database Tier (PostgreSQL)**
+   - Standalone PostgreSQL 17.2 on `t4g.micro` instance
+   - Cost-effective GP2 storage configuration
+   - Basic daily backup retention
+   - Single-AZ deployment for development purposes
+   - Custom parameter group for enhanced logging
 
 ## 🔄 CI/CD Pipeline Implementation
 
@@ -144,10 +151,11 @@ graph TD
 ```
 
 1. **Infrastructure Provisioning (IaC)**
-   - VPC with isolated subnets
-   - EKS cluster configuration
-   - Aurora PostgreSQL (Serverless v2)
-   - IAM & security Policies
+   - TFLint validation for infrastructure code
+   - AWS-specific rule checking
+   - Deprecated resource detection
+   - Best practices enforcement
+   - Automated formatting and documentation
 
 2. **Platform Tools**
    - GitOps with ArgoCD
@@ -156,9 +164,9 @@ graph TD
    - Network (Falco)
    - Secrets (Vault)
    - Ingress (NGINX)
-   - Snapshots (Velero)
 
 3. **Application Deployment**
+   - Automated YAML formatting & syntax verification
    - Declarative configs in Git
    - Automatic sync via ArgoCD
    - Zero-touch deployment
@@ -183,22 +191,20 @@ graph TD
 - [x] Container builds
 
 ### 🏗️ AWS Infrastructure
-- [x] VPC & networking
+- [x] VPC & Networking
 - [x] EKS deployment
 - [x] RDS configuration
-- [x] Security setup
 
 ### ⚡ Platform Services
 - [x] ArgoCD installation
 - [x] Monitoring stack
 - [x] Logging pipeline
 - [x] Secrets management
-- [ ] Security monitoring (Falco)
-- [ ] Backup solution (Velero)
+- [x] Security monitoring
 
 ### 🚀 Applications
-- [ ] API service deployment
-- [ ] Web UI deployment
+- [x] API service deployment
+- [x] Web UI deployment
 
 ## 📁 Project Structure
 
@@ -225,11 +231,6 @@ region         = "your-region"
 backend_bucket = "your-bucket"
 environment    = "dev" "stage" "prod"
 
-vpc_configuration = {
-  cidr = "10.0.0.0/16"
-  # subnet configuration...
-}
-
 db_configuration = {
   name     = "name-of-db"
   username = "username"
@@ -240,9 +241,8 @@ db_configuration = {
 
 ## 📚 Documentation
 
-- [Local Development Guide](docs/local-tests.md)
-- [Security Overview](docs/security.md)
-- [Post-Installation Steps](docs/README.md)
+- [Local Test Readme](docs/local-tests.md)
+- [Applications Configuration Readme](docs/README.md)
 
 <div align="center">
   <img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png">
