@@ -87,6 +87,7 @@ cd helm/charts/aws-ebs-csi-driver && helm dependency build && cd ../../..
 cd helm/charts/ingress-nginx && helm dependency build && cd ../../..
 cd helm/charts/monitoring && helm dependency build && cd ../../..
 cd helm/charts/vault && helm dependency build && cd ../../..
+cd helm/charts/velero && helm dependency build && cd ../../..
 
 # Install Applications via ArgoCD
 log "Installing via ArgoCD..."
@@ -116,10 +117,14 @@ wait_for_deployment "monitoring" "app.kubernetes.io/name=grafana" 300
 log "Deploying Vault..."
 kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/vault.yaml
 
+# Velero
+log "Deploying Velero..."
+kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/velero.yaml
+
 # Applications
-# log "Deploying applications..."
-# kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/api.yaml
+log "Deploying applications..."
+kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/api.yaml
 
-# kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/web.yaml
+kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/web.yaml
 
-# log "Deployment completed successfully! Logs saved to: ${LOG_FILE}"
+log "Deployment completed successfully! Logs saved to: ${LOG_FILE}"
