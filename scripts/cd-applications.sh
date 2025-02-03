@@ -116,19 +116,53 @@ wait_for_deployment "monitoring" "app.kubernetes.io/name=grafana" 300
 log "Deploying Vault..."
 kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/vault.yaml
 
-# Function to wait for Vault
-wait_for_vault() {
-    log "Waiting for Vault to be ready..."
-    until kubectl get pods -n vault vault-0 -o jsonpath='{.status.phase}' | grep "Running"; do
-        sleep 5
+log "Waiting for Vault StatefulSet..."
+until kubectl get pod vault-0 -n vault 2>/dev/null; do
+    log "Waiting for vault-0 pod..."
+    sleep 5
+done
+
+log "Waiting for Vault to be ready..."
+kubectl wait --for=condition=ready pod/vault-0 -n vault --timeout=300s
+
+# Patch the pod to init Vault
+log "Initializing Vault..."
+kubectl exec vault-0 -n vault -- sh -c '
+if ! vault status; then
+    vault operator init -format=json > /tmp/keys.json
+
+    for i in {0..2}; do
+        KEY=$(cat /tmp/keys.json | jq -r ".unseal_keys_b64[$i]")
+        vault operator unseal $KEY
     done
 
-    # Wait for init job
-    kubectl wait --for=condition=complete job/vault-init -n vault --timeout=300s
-}
+    vault login $(cat /tmp/keys.json | jq -r ".root_token")
 
-# Add before API deployment
-wait_for_vault
+    vault secrets enable -path=secret kv-v2
+    vault auth enable kubernetes
+
+    vault write auth/kubernetes/config kubernetes_host="https://kubernetes.default.svc"
+
+    vault policy write api-policy - <<EOF
+    path "secret/data/database" {
+        capabilities = ["read"]
+    }
+    EOF
+
+    vault write auth/kubernetes/role/api \
+        bound_service_account_names=api-sa \
+        bound_service_account_namespaces=app \
+        policies=api-policy \
+        ttl=1h
+
+    vault kv put secret/database \
+        username="jondaw" \
+        password="password" \
+        dbname="devopsdb"
+
+    echo "Vault initialized and configured!"
+fi
+'
 
 # Applications
 log "Deploying applications..."
