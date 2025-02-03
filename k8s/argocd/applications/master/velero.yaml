@@ -4,17 +4,48 @@ metadata:
   name: velero
   namespace: argocd
 spec:
-  project: default
-  source:
-    repoURL: https://github.com/thejondaw/devops-pet-project.git
-    path: helm/charts/velero
-    targetRevision: master
   destination:
     server: https://kubernetes.default.svc
     namespace: velero
+  project: default
+  source:
+    repoURL: https://vmware-tanzu.github.io/helm-charts
+    chart: velero
+    targetRevision: 8.3.0
+    helm:
+      values: |
+        configuration:
+          provider: aws
+          backupStorageLocation:
+            name: aws
+            bucket: alexsuff
+            config:
+              region: us-east-2
+          volumeSnapshotLocation:
+            name: aws
+            config:
+              region: us-east-2
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: velero
+#   namespace: argocd
+# spec:
+#   project: default
+#   source:
+#     repoURL: https://github.com/thejondaw/devops-pet-project.git
+#     path: helm/charts/velero
+#     targetRevision: master
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: velero
+#   syncPolicy:
+#     automated:
+#       prune: true
+#       selfHeal: true
+#     syncOptions:
+#       - CreateNamespace=true

@@ -87,7 +87,6 @@ cd helm/charts/aws-ebs-csi-driver && helm dependency build && cd ../../..
 cd helm/charts/ingress-nginx && helm dependency build && cd ../../..
 cd helm/charts/monitoring && helm dependency build && cd ../../..
 cd helm/charts/vault && helm dependency build && cd ../../..
-cd helm/charts/velero && helm dependency build && cd ../../..
 
 # Install Applications via ArgoCD
 log "Installing via ArgoCD..."
