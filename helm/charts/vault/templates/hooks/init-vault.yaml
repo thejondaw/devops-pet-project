@@ -1,0 +1,63 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-init
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "1"
+spec:
+  template:
+    spec:
+      serviceAccountName: vault-init-sa
+      containers:
+        - name: vault-init
+          image: hashicorp/vault:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              # Initialize Vault if not already initialized
+              if ! vault status; then
+                # Init and capture keys
+                INIT_OUTPUT=$(vault operator init -format=json)
+
+                # Store keys in K8s secret
+                echo "$INIT_OUTPUT" | kubectl create secret generic vault-keys \
+                  --from-file=init-output=/dev/stdin \
+                  -n vault
+
+                # Unseal using first 3 keys
+                for KEY in $(echo "$INIT_OUTPUT" | jq -r '.unseal_keys_b64[0:3][]'); do
+                  vault operator unseal "$KEY"
+                done
+
+                # Login and configure
+                ROOT_TOKEN=$(echo "$INIT_OUTPUT" | jq -r '.root_token')
+                vault login "$ROOT_TOKEN"
+
+                # Basic setup
+                vault secrets enable -path=secret kv-v2
+                vault auth enable kubernetes
+
+                # Configure K8s auth
+                vault write auth/kubernetes/config \
+                  kubernetes_host="https://kubernetes.default.svc"
+
+                # Create and bind policy
+                vault policy write api-policy - <<EOF
+                path "secret/data/database" {
+                  capabilities = ["read"]
+                }
+                EOF
+
+                vault write auth/kubernetes/role/api \
+                  bound_service_account_names=api-sa \
+                  bound_service_account_namespaces=app \
+                  policies=api-policy \
+                  ttl=1h
+
+                # Store DB creds
+                vault kv put secret/database \
+                  username="jondaw" \
+                  password="password" \
+                  dbname="devopsdb"
+              fi

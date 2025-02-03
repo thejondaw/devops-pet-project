@@ -116,9 +116,19 @@ wait_for_deployment "monitoring" "app.kubernetes.io/name=grafana" 300
 log "Deploying Vault..."
 kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/vault.yaml
 
-# Velero
-log "Deploying Velero..."
-kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/velero.yaml
+# Function to wait for Vault
+wait_for_vault() {
+    log "Waiting for Vault to be ready..."
+    until kubectl get pods -n vault vault-0 -o jsonpath='{.status.phase}' | grep "Running"; do
+        sleep 5
+    done
+
+    # Wait for init job
+    kubectl wait --for=condition=complete job/vault-init -n vault --timeout=300s
+}
+
+# Add before API deployment
+wait_for_vault
 
 # Applications
 log "Deploying applications..."
