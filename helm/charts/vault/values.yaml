@@ -57,7 +57,7 @@ vault:
     serviceAccount:
       create: true
       annotations:
-        eks.amazonaws.com/role-arn: arn:aws:iam::529088295850:role/develop-vault-role
+        eks.amazonaws.com/role-arn: arn:aws:iam::${AWS_ACCOUNT_ID}:role/${ENVIRONMENT}-vault-role
 
     extraEnvironmentVars:
       VAULT_ADDR: "http://127.0.0.1:8200"
