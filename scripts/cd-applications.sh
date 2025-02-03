@@ -117,10 +117,10 @@ log "Deploying Vault..."
 kubectl apply -f k8s/argocd/applications/${ENVIRONMENT}/vault.yaml
 
 log "Waiting for Vault StatefulSet..."
-until kubectl get pod vault-0 -n vault 2>/dev/null; do
-    log "Waiting for vault-0 pod..."
-    sleep 5
-done
+if ! kubectl wait --for=condition=ready pod/vault-0 -n vault --timeout=180s; then
+    log "Vault pod failed to start within 3 minutes, check your deployment!"
+    exit 1
+fi
 
 log "Waiting for Vault to be ready..."
 kubectl wait --for=condition=ready pod/vault-0 -n vault --timeout=300s
