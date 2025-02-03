@@ -288,3 +288,85 @@ promtail:
             target_label: namespace
           - source_labels: ["__meta_kubernetes_pod_node_name"]
             target_label: node
+
+# --- Falco runtime security ---
+falco:
+  falcosidekick:
+    enabled: true
+    config:
+      debug: true
+      checkcert: false
+      loki:
+        enabled: true
+        hostport: "http://monitoring-loki.monitoring.svc.cluster.local:3100"
+        minimumpriority: "debug"
+
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+
+  metrics:
+    enabled: true
+    service:
+      type: ClusterIP
+      port: 8765
+    serviceMonitor:
+      enabled: true
+      namespace: monitoring
+      interval: 15s
+      scrapeTimeout: 10s
+      additionalLabels:
+        release: monitoring
+
+  driver:
+    enabled: true
+    kind: ebpf
+    loader:
+      enabled: true
+      initContainer:
+        securityContext:
+          privileged: true
+        env:
+          - name: FALCO_BPF_PROBE
+            value: "/root/.falco/falco-bpf.o"
+
+  containerSecurityContext:
+    privileged: true
+    capabilities:
+      add:
+        - SYS_ADMIN
+        - SYS_RESOURCE
+        - SYS_PTRACE
+        - NET_ADMIN
+        - IPC_LOCK
+        - SYS_NICE
+
+  collectors:
+    enabled: true
+    docker:
+      enabled: true
+      socket: /var/run/docker.sock
+    containerd:
+      enabled: true
+      socket: /run/containerd/containerd.sock
+    crio:
+      enabled: true
+      socket: /run/crio/crio.sock
+
+  log_level: info
+  json_output: true
+  log_stderr: true
+
+  rules_files:
+    - /etc/falco/falco_rules.yaml
+    - /etc/falco/falco_rules.local.yaml
+    - /etc/falco/rules.d
+
+  stdout_output:
+    enabled: true
+  syslog_output:
+    enabled: false
