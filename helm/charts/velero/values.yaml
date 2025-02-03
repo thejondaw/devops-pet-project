@@ -8,22 +8,26 @@ velero:
         - mountPath: /target
           name: plugins
 
-  # Main settings
+  # Backup configuration
   configuration:
-    provider: aws
     backupStorageLocation:
-      name: default
-      provider: aws
-      # Using existing S3 bucket with prefix for velero
-      bucket: alexsuff
-      prefix: velero/${ENVIRONMENT}
-      config:
-        region: us-east-2
+      - name: default
+        provider: aws
+        # Using existing S3 bucket with prefix for velero
+        bucket: alexsuff
+        prefix: velero/${ENVIRONMENT}
+        config:
+          region: us-east-2
+    volumeSnapshotLocation:
+      - name: aws
+        provider: aws
+        config:
+          region: us-east-2
 
-  # Schedule daily backups at 3 AM
+  # Schedule daily backups at 3:30 AM
   schedules:
-    daily-backup:
-      schedule: "0 3 * * *"
+    full-cluster-backup:
+      schedule: "30 3 * * *"
       template:
         ttl: "168h" # Keep backups for 7 days
         includedNamespaces:
@@ -50,10 +54,11 @@ velero:
   serviceAccount:
     server:
       create: true
+      name: velero
       annotations:
-        eks.amazonaws.com/role-arn: arn:aws:iam::${AWS_ACCOUNT_ID}:role/${ENVIRONMENT}-velero-role
+        eks.amazonaws.com/role-arn: arn:aws:iam::529088295850:role/${ENVIRONMENT}-velero-role
 
-  # Metrics for Prometheus
+  # Metrics settings for monitoring
   metrics:
     enabled: true
     serviceMonitor:

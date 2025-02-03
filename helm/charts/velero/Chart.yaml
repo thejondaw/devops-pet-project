@@ -1,6 +1,6 @@
 apiVersion: v2
 name: velero
-description: Tool for cluster backup and disaster recovery
+description: Backup and disaster recovery tool for Kubernetes clusters
 version: 0.1.0
 dependencies:
   - name: velero
