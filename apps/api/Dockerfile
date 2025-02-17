@@ -1,7 +1,7 @@
 FROM node:14-alpine
 WORKDIR /usr/src/app
 COPY package*.json ./
-RUN npm install --only=production --legacy-peer-deps && npm cache clean --force && rm -rf /tmp/* /var/cache/apk/*
+RUN npm install --only=production --legacy-peer-deps && npm cache clean --force
 COPY . .
 ENV PORT=3000 \
     DBUSER='' \
